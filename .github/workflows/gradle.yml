@@ -2,45 +2,25 @@ name: Gradle Build
 
 on: [push]
 
-concurrency: build-${{ github.ref }}
-
 jobs:
-  publish_vars:
-    runs-on: ubuntu-latest
-
-    outputs:
-      publish: ${{ steps.publish_vars.outputs.release != 'true' && github.ref == 'refs/heads/master' }}
-      repo: ${{ steps.publish_vars.outputs.repo }}
-
-    steps:
-
-      - uses: actions/checkout@v6
-
-      - name: Get publishing variables
-        id: publish_vars
-        uses: enonic/release-tools/publish-vars@master
-        env:
-          PROPERTIES_PATH: './gradle.properties'
-
   build:
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.build-and-publish.outputs.release }}
+    steps:
+      - id: build-and-publish
+        uses: enonic/release-tools/build-and-publish@master
+        with:
+          repoUser: ci
+          repoPassword: ${{ secrets.ARTIFACTORY_PASSWORD }}
 
-    needs: publish_vars
+  release:
+    runs-on: ubuntu-latest
+
+    needs: build
+    if: needs.build.outputs.release == 'true'
 
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-java@v5
+      - uses: enonic/release-tools/release@master
         with:
-          distribution: temurin
-          java-version: 25
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
-
-      - name: Build with Gradle
-        run: ./gradlew build
-
-      - name: Publish
-        if: needs.publish_vars.outputs.publish == 'true'
-        run: ./gradlew publish -PrepoKey=${{ needs.publish_vars.outputs.repo }} -PrepoUser=ci -PrepoPassword=${{ secrets.ARTIFACTORY_PASSWORD }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}

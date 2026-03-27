@@ -50,7 +50,9 @@ exports.testResolveMultiOriginMatch = function (config, req) {
 
 exports.testResolveOriginMismatch = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
-    testingLib.assertJsonEquals({}, headers);
+    testingLib.assertJsonEquals({
+        'vary': 'Origin',
+    }, headers);
 };
 
 exports.testResolveCredentialsSkippedForWildcard = function (config, req) {

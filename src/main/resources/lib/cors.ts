@@ -75,7 +75,11 @@ export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeader
                 break;
             }
         }
-        if (!matched || origin == null) return {};
+        if (!matched || origin == null) {
+            return {
+                vary: 'Origin',
+            };
+        }
         headers['access-control-allow-origin'] = origin;
         headers['vary'] = 'Origin';
     } else if (origin) {
