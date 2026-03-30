@@ -34,6 +34,7 @@ pnpm fix                    # auto-fix lint + formatting
 - `cors.credentials` — `'true'` to allow credentials (requires `cors.origin`)
 - `cors.allowedHeaders` — comma-separated (default: `'Content-Type'`)
 - `cors.methods` — comma-separated (default: `'POST, OPTIONS'`)
+- `cors.exposedHeaders` — comma-separated (headers the browser may access)
 - `cors.maxAge` — preflight cache duration in seconds
 
 ## Git & GitHub

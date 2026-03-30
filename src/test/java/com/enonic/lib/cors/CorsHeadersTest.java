@@ -65,6 +65,7 @@ public class CorsHeadersTest
         config.put( "cors.credentials", "true" );
         config.put( "cors.allowedHeaders", "Content-Type, Authorization" );
         config.put( "cors.methods", "POST, OPTIONS, GET" );
+        config.put( "cors.exposedHeaders", "X-Custom-Header, X-Request-Id" );
         config.put( "cors.maxAge", "1200" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -126,5 +127,33 @@ public class CorsHeadersTest
         when( request.getHeader( "Origin" ) ).thenReturn( null );
 
         runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveCredentialsSkippedForWildcard", config, request );
+    }
+
+    @Test
+    public void testResolveExposedHeadersNormalized()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.exposedHeaders", " X-Custom-Header, , X-Request-Id, X-Custom-Header " );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( null );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveExposedHeadersNormalized", config, request );
+    }
+
+    @Test
+    public void testResolveExposedHeadersWildcardPreserved()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "http://test-cors.com:3000" );
+        config.put( "cors.credentials", "true" );
+        config.put( "cors.exposedHeaders", "*" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "http://test-cors.com:3000" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveExposedHeadersWildcardPreserved", config, request );
     }
 }

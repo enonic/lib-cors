@@ -47,6 +47,7 @@ cors.origin = https://example.com, https://admin.example.com
 cors.credentials = true
 cors.allowedHeaders = Content-Type, Authorization
 cors.methods = POST, OPTIONS
+cors.exposedHeaders = X-Request-Id, X-Custom-Header
 cors.maxAge = 3600
 ```
 
@@ -57,7 +58,12 @@ cors.maxAge = 3600
 | `cors.credentials`   | `false`          | Allow credentials. Requires `cors.origin` to be set          |
 | `cors.allowedHeaders`| `Content-Type`   | `Access-Control-Allow-Headers` value                         |
 | `cors.methods`       | `POST, OPTIONS`  | `Access-Control-Allow-Methods` value                         |
+| `cors.exposedHeaders`| _(not set)_      | Extra response headers to expose beyond the CORS safelist    |
 | `cors.maxAge`        | _(not set)_      | Preflight cache duration in seconds                          |
+
+`cors.exposedHeaders` is a comma-separated list of header names. The library normalizes whitespace and removes duplicates before sending `Access-Control-Expose-Headers`.
+
+If you configure `cors.exposedHeaders = *`, browsers only treat `*` as a wildcard for non-credentialed requests.
 
 ## Building
 

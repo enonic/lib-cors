@@ -10,6 +10,7 @@
  * - cors.credentials   — 'true' to allow credentials (requires cors.origin)
  * - cors.allowedHeaders — comma-separated (default: 'Content-Type')
  * - cors.methods       — comma-separated (default: 'POST, OPTIONS')
+ * - cors.exposedHeaders — comma-separated (headers the browser may access)
  * - cors.maxAge        — preflight cache seconds
  *
  * Usage in an XP controller:
@@ -56,6 +57,26 @@ type CorsResponse = {
 const DEFAULT_ALLOWED_HEADERS = 'Content-Type';
 const DEFAULT_METHODS = 'POST, OPTIONS';
 
+function parseCommaSeparatedList(value?: string): string[] {
+    if (!value) {
+        return [];
+    }
+
+    const result: string[] = [];
+    const parts = value.split(',');
+
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i].trim();
+        if (!part || result.indexOf(part) !== -1) {
+            continue;
+        }
+
+        result.push(part);
+    }
+
+    return result;
+}
+
 /**
  * Resolves CORS headers based on configuration and request.
  * Returns an empty object when CORS is disabled.
@@ -67,10 +88,10 @@ export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeader
 
     const origin = req.getHeader('Origin');
     if (config['cors.origin']) {
-        const allowedOrigins = config['cors.origin'].split(',');
+        const allowedOrigins = parseCommaSeparatedList(config['cors.origin']);
         let matched = false;
         for (let i = 0; i < allowedOrigins.length; i++) {
-            if (allowedOrigins[i].trim() === origin) {
+            if (allowedOrigins[i] === origin) {
                 matched = true;
                 break;
             }
@@ -95,6 +116,11 @@ export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeader
 
     headers['access-control-allow-headers'] = config['cors.allowedHeaders'] || DEFAULT_ALLOWED_HEADERS;
     headers['access-control-allow-methods'] = config['cors.methods'] || DEFAULT_METHODS;
+
+    const exposedHeaders = parseCommaSeparatedList(config['cors.exposedHeaders']);
+    if (exposedHeaders.length > 0) {
+        headers['access-control-expose-headers'] = exposedHeaders.join(', ');
+    }
 
     if (config['cors.maxAge']) {
         headers['access-control-max-age'] = config['cors.maxAge'];
