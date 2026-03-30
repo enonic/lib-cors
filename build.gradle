@@ -77,8 +77,15 @@ tasks.named( 'compileTestJava' ).configure {
     dependsOn tasks.named( 'pnpmBuild' )
 }
 
+tasks.register( 'pnpmTest', PnpmTask ) {
+    args = ['run', 'test']
+    environment = ['FORCE_COLOR': 'true']
+    dependsOn tasks.named( 'pnpmInstall' )
+}
+
 tasks.named( 'check' ).configure {
     dependsOn tasks.named( 'pnpmCheck' )
+    dependsOn tasks.named( 'pnpmTest' )
 }
 
 tasks.named( 'processResources' ).configure {

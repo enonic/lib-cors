@@ -12,30 +12,8 @@
 pnpm build                  # dev build (TypeScript only)
 pnpm check                  # lint + type-check
 pnpm fix                    # auto-fix lint + formatting
+pnpm test                   # test TS utility functions only
 ```
-
-## Architecture
-
-**Build pipeline:** TypeScript → esbuild (CJS, ES5 target with `const`/`let` and arrow support) → `build/resources/main/`.
-
-- **Source:** `src/main/resources/lib/cors.ts` — single entry point, imported via `require('/lib/cors')`
-- **Linting & formatting:** Biome (`biome.json`). Enforces `const`/`let` over `var`, single quotes.
-- **Type checking:** `tsc --noEmit` (TypeScript 5, ES5 lib)
-- **Tests:** Java (JUnit 5 + Mockito) via `ScriptTestSupport`. Test JS at `src/test/resources/`.
-
-**Exported API:**
-- `resolveHeaders(config, req)` — resolves CORS headers from config + request
-- `getHeaders(req)` — convenience wrapper using `app.config`
-- `respondOptions(req)` — returns `{ status: 204, headers }` preflight response
-
-**Config keys** (read from `app.config` or passed explicitly):
-- `cors.enabled` — `'true'` (default) or `'false'`
-- `cors.origin` — allowed origin(s), comma-separated
-- `cors.credentials` — `'true'` to allow credentials (requires `cors.origin`)
-- `cors.allowedHeaders` — comma-separated (default: `'Content-Type'`)
-- `cors.methods` — comma-separated (default: `'POST, OPTIONS'`)
-- `cors.exposedHeaders` — comma-separated (headers the browser may access)
-- `cors.maxAge` — preflight cache duration in seconds
 
 ## Git & GitHub
 

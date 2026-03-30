@@ -6,7 +6,7 @@
         "useIgnoreFile": true
     },
     "files": {
-        "includes": ["src/main/resources/**/*.ts", "*.{ts,js,mjs}"]
+        "includes": ["src/main/resources/**/*.ts", "src/test/node/**/*.ts", "*.{ts,js,mjs}"]
     },
     "assist": {
         "actions": {

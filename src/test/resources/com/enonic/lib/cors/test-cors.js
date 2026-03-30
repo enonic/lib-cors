@@ -86,3 +86,57 @@ exports.testResolveExposedHeadersWildcardPreserved = function (config, req) {
         'access-control-expose-headers': '*',
     }, headers);
 };
+
+exports.testResolveWildcardOrigin = function (config, req) {
+    var headers = corsLib.resolveHeaders(config, req);
+    testingLib.assertJsonEquals({
+        'access-control-allow-origin': '*',
+        'access-control-allow-headers': 'Content-Type',
+        'access-control-allow-methods': 'POST, OPTIONS',
+    }, headers);
+};
+
+exports.testResolveWildcardOriginNoRequestOrigin = function (config, req) {
+    var headers = corsLib.resolveHeaders(config, req);
+    testingLib.assertJsonEquals({
+        'access-control-allow-origin': '*',
+        'access-control-allow-headers': 'Content-Type',
+        'access-control-allow-methods': 'POST, OPTIONS',
+    }, headers);
+};
+
+exports.testResolveWildcardOriginWithCredentials = function (config, req) {
+    var headers = corsLib.resolveHeaders(config, req);
+    testingLib.assertJsonEquals({
+        'access-control-allow-origin': '*',
+        'access-control-allow-headers': 'Content-Type',
+        'access-control-allow-methods': 'POST, OPTIONS',
+    }, headers);
+};
+
+exports.testResolveRegexOriginMatch = function (config, req) {
+    var headers = corsLib.resolveHeaders(config, req);
+    testingLib.assertJsonEquals({
+        'access-control-allow-origin': 'https://sub.example.com',
+        'vary': 'Origin',
+        'access-control-allow-headers': 'Content-Type',
+        'access-control-allow-methods': 'POST, OPTIONS',
+    }, headers);
+};
+
+exports.testResolveRegexOriginMismatch = function (config, req) {
+    var headers = corsLib.resolveHeaders(config, req);
+    testingLib.assertJsonEquals({
+        'vary': 'Origin',
+    }, headers);
+};
+
+exports.testResolveMixedLiteralAndRegex = function (config, req) {
+    var headers = corsLib.resolveHeaders(config, req);
+    testingLib.assertJsonEquals({
+        'access-control-allow-origin': 'https://sub.example.com',
+        'vary': 'Origin',
+        'access-control-allow-headers': 'Content-Type',
+        'access-control-allow-methods': 'POST, OPTIONS',
+    }, headers);
+};

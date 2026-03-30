@@ -156,4 +156,83 @@ public class CorsHeadersTest
 
         runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveExposedHeadersWildcardPreserved", config, request );
     }
+
+    @Test
+    public void testResolveWildcardOrigin()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "http://any.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveWildcardOrigin", config, request );
+    }
+
+    @Test
+    public void testResolveWildcardOriginNoRequestOrigin()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( null );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveWildcardOriginNoRequestOrigin", config, request );
+    }
+
+    @Test
+    public void testResolveWildcardOriginWithCredentials()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
+        config.put( "cors.credentials", "true" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "http://any.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveWildcardOriginWithCredentials", config, request );
+    }
+
+    @Test
+    public void testResolveRegexOriginMatch()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "~https://.*\\.example\\.com" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "https://sub.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveRegexOriginMatch", config, request );
+    }
+
+    @Test
+    public void testResolveRegexOriginMismatch()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "~https://.*\\.example\\.com" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "https://evil.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveRegexOriginMismatch", config, request );
+    }
+
+    @Test
+    public void testResolveMixedLiteralAndRegex()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "http://exact.com, ~https://.*\\.example\\.com" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "https://sub.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveMixedLiteralAndRegex", config, request );
+    }
 }

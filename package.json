@@ -13,6 +13,7 @@
     "check": "pnpm check:lint && pnpm check:types",
     "check:lint": "biome check .",
     "check:types": "tsc --noEmit",
+    "test": "node --test src/test/node/util.test.ts",
     "fix": "biome check . --fix",
     "prepare": "husky"
   },

@@ -6,8 +6,10 @@
  *
  * Configuration via app .cfg file:
  * - cors.enabled       — 'true' (default) or 'false'
- * - cors.origin        — allowed origin(s), comma-separated (e.g. 'https://a.com,https://b.com')
- * - cors.credentials   — 'true' to allow credentials (requires cors.origin)
+ * - cors.origin        — allowed origin(s): '*' to allow all, comma-separated list of
+ *                         literal origins or '~'-prefixed regex patterns
+ *                         (e.g. 'https://a.com, ~https://.*\.b\.com')
+ * - cors.credentials   — 'true' to allow credentials (incompatible with '*' origin)
  * - cors.allowedHeaders — comma-separated (default: 'Content-Type')
  * - cors.methods       — comma-separated (default: 'POST, OPTIONS')
  * - cors.exposedHeaders — comma-separated (headers the browser may access)
@@ -41,6 +43,8 @@
  * ```
  */
 
+import { matchOrigin, parseCommaSeparatedList } from './util';
+
 type CorsConfig = Record<string, string | undefined>;
 
 type CorsRequest = {
@@ -57,29 +61,23 @@ type CorsResponse = {
 const DEFAULT_ALLOWED_HEADERS = 'Content-Type';
 const DEFAULT_METHODS = 'POST, OPTIONS';
 
-function parseCommaSeparatedList(value?: string): string[] {
-    if (!value) {
-        return [];
-    }
-
-    const result: string[] = [];
-    const parts = value.split(',');
-
-    for (let i = 0; i < parts.length; i++) {
-        const part = parts[i].trim();
-        if (!part || result.indexOf(part) !== -1) {
-            continue;
-        }
-
-        result.push(part);
-    }
-
-    return result;
-}
-
 /**
  * Resolves CORS headers based on configuration and request.
- * Returns an empty object when CORS is disabled.
+ *
+ * Origin matching (`cors.origin`):
+ * - `'*'` — responds with `Access-Control-Allow-Origin: *`.
+ * - Comma-separated list — each value is either a literal origin or a
+ *   `~`-prefixed regex (full match). The request origin is reflected back
+ *   on match; `{ vary: 'Origin' }` is returned on mismatch.
+ * - Not set — the request origin is echoed back, or `*` when absent.
+ *
+ * Credentials (`cors.credentials`):
+ * - Set to `'true'` only when `cors.origin` is explicitly configured and
+ *   the resolved `Access-Control-Allow-Origin` is not `'*'`.
+ *
+ * @param config - Key-value config map (typically `app.config`).
+ * @param req - Incoming request with a `getHeader` method.
+ * @returns CORS headers to merge into the response.
  */
 export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeaders {
     if (config['cors.enabled'] === 'false') return {};
@@ -88,21 +86,26 @@ export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeader
 
     const origin = req.getHeader('Origin');
     if (config['cors.origin']) {
-        const allowedOrigins = parseCommaSeparatedList(config['cors.origin']);
-        let matched = false;
-        for (let i = 0; i < allowedOrigins.length; i++) {
-            if (allowedOrigins[i] === origin) {
-                matched = true;
-                break;
+        if (config['cors.origin'] === '*') {
+            headers['access-control-allow-origin'] = '*';
+        } else {
+            const allowedOrigins = parseCommaSeparatedList(config['cors.origin']);
+            if (origin == null) {
+                return { vary: 'Origin' };
             }
+            let matched = false;
+            for (let i = 0; i < allowedOrigins.length; i++) {
+                if (matchOrigin(allowedOrigins[i], origin)) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                return { vary: 'Origin' };
+            }
+            headers['access-control-allow-origin'] = origin;
+            headers['vary'] = 'Origin';
         }
-        if (!matched || origin == null) {
-            return {
-                vary: 'Origin',
-            };
-        }
-        headers['access-control-allow-origin'] = origin;
-        headers['vary'] = 'Origin';
     } else if (origin) {
         headers['access-control-allow-origin'] = origin;
         headers['vary'] = 'Origin';
@@ -110,7 +113,11 @@ export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeader
         headers['access-control-allow-origin'] = '*';
     }
 
-    if ((config['cors.credentials'] || '') === 'true' && config['cors.origin']) {
+    if (
+        (config['cors.credentials'] || '') === 'true' &&
+        config['cors.origin'] &&
+        headers['access-control-allow-origin'] !== '*'
+    ) {
         headers['access-control-allow-credentials'] = 'true';
     }
 
@@ -131,6 +138,9 @@ export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeader
 
 /**
  * Convenience wrapper that resolves CORS headers using `app.config`.
+ *
+ * @param req - Incoming request with a `getHeader` method.
+ * @returns CORS headers to merge into the response.
  */
 export function getHeaders(req: CorsRequest): CorsHeaders {
     return resolveHeaders(app.config, req);
@@ -138,6 +148,9 @@ export function getHeaders(req: CorsRequest): CorsHeaders {
 
 /**
  * Returns a 204 preflight response with CORS headers from `app.config`.
+ *
+ * @param req - Incoming request with a `getHeader` method.
+ * @returns Object with `status: 204` and resolved CORS headers.
  */
 export function respondOptions(req: CorsRequest): CorsResponse {
     return {
