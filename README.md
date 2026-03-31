@@ -42,24 +42,24 @@ For explicit config, use `resolveHeaders(config, req)` instead.
 Add to the consuming app's `.cfg` file (e.g. `com.example.myapp.cfg`):
 
 ```properties
-cors.enabled = true
 cors.origin = https://example.com, https://admin.example.com
 cors.credentials = true
 cors.allowedHeaders = Content-Type, Authorization
-cors.methods = POST, OPTIONS
+cors.methods = POST, GET
 cors.exposedHeaders = X-Request-Id, X-Custom-Header
 cors.maxAge = 3600
 ```
 
 | Key                  | Default          | Description                                                  |
 |----------------------|------------------|--------------------------------------------------------------|
-| `cors.enabled`       | `true`           | Set to `false` to disable CORS headers entirely              |
-| `cors.origin`        | _(any origin)_   | Allowed origin(s), comma-separated. Omit to reflect/wildcard |
-| `cors.credentials`   | `false`          | Allow credentials. Requires `cors.origin` to be set          |
+| `cors.origin`        | _(not set)_      | Allowed origin(s), comma-separated. Omit to disable CORS     |
+| `cors.credentials`   | `false`          | Allow credentials (incompatible with `*` origin)             |
 | `cors.allowedHeaders`| _(not set)_      | `Access-Control-Allow-Headers` value                         |
 | `cors.methods`       | `GET, HEAD, POST`| `Access-Control-Allow-Methods` value                         |
 | `cors.exposedHeaders`| _(not set)_      | Extra response headers to expose beyond the CORS safelist    |
 | `cors.maxAge`        | _(not set)_      | Preflight cache duration in seconds                          |
+
+`cors.origin` supports `*` (allow all origins), literal origins, and `~`-prefixed regex patterns for dynamic matching (e.g. `~https://.*\.example\.com`). Can use `~.*` to reflect all. Multiple values are comma-separated.
 
 If `cors.allowedHeaders` is not configured and a request includes `Access-Control-Request-Headers`, that value is reflected in `Access-Control-Allow-Headers`.
 

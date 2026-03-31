@@ -1,17 +1,9 @@
 var testingLib = require('/lib/xp/testing');
 var corsLib = require('/lib/cors');
 
-exports.testResolveWhenCorsHeadersDisabled = function (config, req) {
+exports.testResolveWhenCorsOriginNotSet = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({}, headers);
-};
-
-exports.testResolveDefaultCorsHeaders = function (config, req) {
-    var headers = corsLib.resolveHeaders(config, req);
-    testingLib.assertJsonEquals({
-        'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, HEAD, POST',
-    }, headers);
 };
 
 exports.testResolveCorsHeaders = function (config, req) {
@@ -32,6 +24,7 @@ exports.testResolveCorsHeadersWithOriginFromRequest = function (config, req) {
     testingLib.assertJsonEquals({
         'access-control-allow-origin': 'http://test-cors.com:3000',
         'vary': 'Origin',
+        'access-control-allow-credentials': 'true',
         'access-control-allow-headers': 'Content-Type, Authorization',
         'access-control-allow-methods': 'POST, OPTIONS',
         'access-control-max-age': '600',
@@ -61,14 +54,6 @@ exports.testResolveOriginMismatch = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({
         'vary': 'Origin',
-    }, headers);
-};
-
-exports.testResolveCredentialsSkippedForWildcard = function (config, req) {
-    var headers = corsLib.resolveHeaders(config, req);
-    testingLib.assertJsonEquals({
-        'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -132,7 +117,7 @@ exports.testResolveRegexOriginMismatch = function (config, req) {
     }, headers);
 };
 
-exports.testResolveOptionsWhenDisabled = function (config, req) {
+exports.testResolveOptionsWhenCorsOriginNotSet = function (config, req) {
     var response = corsLib.resolveOptionsResponse(config, req);
     testingLib.assertJsonEquals({
         status: 204,

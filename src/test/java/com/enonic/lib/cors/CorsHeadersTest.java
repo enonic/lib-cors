@@ -24,43 +24,18 @@ public class CorsHeadersTest
     }
 
     @Test
-    public void testResolveWhenCorsHeadersDisabled()
-    {
-        Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "false" );
-
-        HttpServletRequest request = mock( HttpServletRequest.class );
-        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveWhenCorsHeadersDisabled", config, request );
-    }
-
-    @Test
-    public void testResolveDefaultCorsHeadersWhenEnabledUndefined()
+    public void testResolveWhenCorsOriginNotSet()
     {
         Map<String, String> config = new HashMap<>();
 
         HttpServletRequest request = mock( HttpServletRequest.class );
-        when( request.getHeader( "Origin" ) ).thenReturn( null );
-
-        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveDefaultCorsHeaders", config, request );
-    }
-
-    @Test
-    public void testResolveDefaultCorsHeaders()
-    {
-        Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
-
-        HttpServletRequest request = mock( HttpServletRequest.class );
-        when( request.getHeader( "Origin" ) ).thenReturn( null );
-
-        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveDefaultCorsHeaders", config, request );
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveWhenCorsOriginNotSet", config, request );
     }
 
     @Test
     public void testResolveCorsHeaders()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "http://test-cors.com:3000" );
         config.put( "cors.credentials", "true" );
         config.put( "cors.allowedHeaders", "Content-Type, Authorization" );
@@ -78,7 +53,7 @@ public class CorsHeadersTest
     public void testResolveCorsHeadersWithOriginFromRequest()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "http://test-cors.com:3000" );
         config.put( "cors.credentials", "true" );
         config.put( "cors.allowedHeaders", "Content-Type, Authorization" );
         config.put( "cors.methods", "POST, OPTIONS" );
@@ -94,7 +69,7 @@ public class CorsHeadersTest
     public void testResolveCorsHeadersReflectsRequestedHeadersWhenAllowedHeadersMissing()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "http://test-cors.com:3000" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
         when( request.getHeader( "Origin" ) ).thenReturn( "http://test-cors.com:3000" );
@@ -108,7 +83,6 @@ public class CorsHeadersTest
     public void testResolveMultiOriginMatch()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "http://a.com, http://b.com, http://c.com" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -121,7 +95,6 @@ public class CorsHeadersTest
     public void testResolveOriginMismatch()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "http://allowed.com" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -131,23 +104,10 @@ public class CorsHeadersTest
     }
 
     @Test
-    public void testResolveCredentialsSkippedForWildcard()
-    {
-        Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
-        config.put( "cors.credentials", "true" );
-
-        HttpServletRequest request = mock( HttpServletRequest.class );
-        when( request.getHeader( "Origin" ) ).thenReturn( null );
-
-        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveCredentialsSkippedForWildcard", config, request );
-    }
-
-    @Test
     public void testResolveExposedHeadersNormalized()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
         config.put( "cors.exposedHeaders", " X-Custom-Header, , X-Request-Id, X-Custom-Header " );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -160,7 +120,6 @@ public class CorsHeadersTest
     public void testResolveExposedHeadersWildcardPreserved()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "http://test-cors.com:3000" );
         config.put( "cors.credentials", "true" );
         config.put( "cors.exposedHeaders", "*" );
@@ -175,7 +134,6 @@ public class CorsHeadersTest
     public void testResolveWildcardOrigin()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "*" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -188,7 +146,6 @@ public class CorsHeadersTest
     public void testResolveWildcardOriginNoRequestOrigin()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "*" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -201,7 +158,6 @@ public class CorsHeadersTest
     public void testResolveWildcardOriginWithCredentials()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "*" );
         config.put( "cors.credentials", "true" );
 
@@ -215,7 +171,6 @@ public class CorsHeadersTest
     public void testResolveRegexOriginMatch()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "~https://.*\\.example\\.com" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -228,7 +183,6 @@ public class CorsHeadersTest
     public void testResolveRegexOriginMismatch()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "~https://.*\\.example\\.com" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -238,23 +192,19 @@ public class CorsHeadersTest
     }
 
     @Test
-    public void testResolveOptionsWhenDisabled()
+    public void testResolveOptionsWhenCorsOriginNotSet()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "false" );
-        config.put( "cors.allowedHeaders", "Content-Type" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
-        when( request.getHeader( "Access-Control-Request-Headers" ) ).thenReturn( "X-Evil-Header" );
 
-        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsWhenDisabled", config, request );
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsWhenCorsOriginNotSet", config, request );
     }
 
     @Test
     public void testResolveOptionsRejectsDisallowedHeaders()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "http://test-cors.com:3000" );
         config.put( "cors.allowedHeaders", "Content-Type, Authorization" );
 
@@ -269,7 +219,6 @@ public class CorsHeadersTest
     public void testResolveOptionsAllowsConfiguredHeaders()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "http://test-cors.com:3000" );
         config.put( "cors.allowedHeaders", "Content-Type, Authorization" );
 
@@ -284,7 +233,7 @@ public class CorsHeadersTest
     public void testResolveOptionsRejectsDisallowedMethod()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
         config.put( "cors.methods", "GET, POST" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -297,7 +246,7 @@ public class CorsHeadersTest
     public void testResolveOptionsAllowsWildcardMethod()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
         config.put( "cors.methods", "*" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -310,7 +259,7 @@ public class CorsHeadersTest
     public void testResolveOptionsAllowsDefaultMethod()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
         when( request.getHeader( "Access-Control-Request-Method" ) ).thenReturn( "POST" );
@@ -322,7 +271,7 @@ public class CorsHeadersTest
     public void testResolveOptionsAllowsWildcardHeaders()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
         config.put( "cors.allowedHeaders", "*" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -335,7 +284,7 @@ public class CorsHeadersTest
     public void testResolveMethodsNormalizedToUppercase()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "*" );
         config.put( "cors.methods", "get, post" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
@@ -347,7 +296,6 @@ public class CorsHeadersTest
     public void testResolveMixedLiteralAndRegex()
     {
         Map<String, String> config = new HashMap<>();
-        config.put( "cors.enabled", "true" );
         config.put( "cors.origin", "http://exact.com, ~https://.*\\.example\\.com" );
 
         HttpServletRequest request = mock( HttpServletRequest.class );
