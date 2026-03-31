@@ -10,7 +10,7 @@ exports.testResolveDefaultCorsHeaders = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -44,7 +44,7 @@ exports.testResolveCorsHeadersReflectsRequestedHeadersWhenAllowedHeadersMissing 
         'access-control-allow-origin': 'http://test-cors.com:3000',
         'vary': 'Origin',
         'access-control-allow-headers': 'Content-Type, X-Trace-Id',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -53,7 +53,7 @@ exports.testResolveMultiOriginMatch = function (config, req) {
     testingLib.assertJsonEquals({
         'access-control-allow-origin': 'http://b.com',
         'vary': 'Origin',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -68,7 +68,7 @@ exports.testResolveCredentialsSkippedForWildcard = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -76,7 +76,7 @@ exports.testResolveExposedHeadersNormalized = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
         'access-control-expose-headers': 'X-Custom-Header, X-Request-Id',
     }, headers);
 };
@@ -87,7 +87,7 @@ exports.testResolveExposedHeadersWildcardPreserved = function (config, req) {
         'access-control-allow-origin': 'http://test-cors.com:3000',
         'vary': 'Origin',
         'access-control-allow-credentials': 'true',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
         'access-control-expose-headers': '*',
     }, headers);
 };
@@ -96,7 +96,7 @@ exports.testResolveWildcardOrigin = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -104,7 +104,7 @@ exports.testResolveWildcardOriginNoRequestOrigin = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -112,7 +112,7 @@ exports.testResolveWildcardOriginWithCredentials = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);
     testingLib.assertJsonEquals({
         'access-control-allow-origin': '*',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -121,7 +121,7 @@ exports.testResolveRegexOriginMatch = function (config, req) {
     testingLib.assertJsonEquals({
         'access-control-allow-origin': 'https://sub.example.com',
         'vary': 'Origin',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };
 
@@ -156,9 +156,37 @@ exports.testResolveOptionsAllowsConfiguredHeaders = function (config, req) {
             'access-control-allow-origin': 'http://test-cors.com:3000',
             'vary': 'Origin',
             'access-control-allow-headers': 'Content-Type, Authorization',
-            'access-control-allow-methods': 'POST, OPTIONS',
+            'access-control-allow-methods': 'GET, HEAD, POST',
         },
     }, response);
+};
+
+exports.testResolveOptionsRejectsDisallowedMethod = function (config, req) {
+    var response = corsLib.resolveOptionsResponse(config, req);
+    testingLib.assertJsonEquals({
+        status: 403,
+        headers: {},
+    }, response);
+};
+
+exports.testResolveOptionsAllowsWildcardMethod = function (config, req) {
+    var response = corsLib.resolveOptionsResponse(config, req);
+    testingLib.assertEquals(204, response.status);
+};
+
+exports.testResolveOptionsAllowsDefaultMethod = function (config, req) {
+    var response = corsLib.resolveOptionsResponse(config, req);
+    testingLib.assertEquals(204, response.status);
+};
+
+exports.testResolveOptionsAllowsWildcardHeaders = function (config, req) {
+    var response = corsLib.resolveOptionsResponse(config, req);
+    testingLib.assertEquals(204, response.status);
+};
+
+exports.testResolveMethodsNormalizedToUppercase = function (config, req) {
+    var headers = corsLib.resolveHeaders(config, req);
+    testingLib.assertEquals('GET, POST', headers['access-control-allow-methods']);
 };
 
 exports.testResolveMixedLiteralAndRegex = function (config, req) {
@@ -166,6 +194,6 @@ exports.testResolveMixedLiteralAndRegex = function (config, req) {
     testingLib.assertJsonEquals({
         'access-control-allow-origin': 'https://sub.example.com',
         'vary': 'Origin',
-        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-methods': 'GET, HEAD, POST',
     }, headers);
 };

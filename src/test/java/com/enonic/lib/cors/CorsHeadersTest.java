@@ -281,6 +281,69 @@ public class CorsHeadersTest
     }
 
     @Test
+    public void testResolveOptionsRejectsDisallowedMethod()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.methods", "GET, POST" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Access-Control-Request-Method" ) ).thenReturn( "DELETE" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsRejectsDisallowedMethod", config, request );
+    }
+
+    @Test
+    public void testResolveOptionsAllowsWildcardMethod()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.methods", "*" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Access-Control-Request-Method" ) ).thenReturn( "DELETE" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsAllowsWildcardMethod", config, request );
+    }
+
+    @Test
+    public void testResolveOptionsAllowsDefaultMethod()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Access-Control-Request-Method" ) ).thenReturn( "POST" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsAllowsDefaultMethod", config, request );
+    }
+
+    @Test
+    public void testResolveOptionsAllowsWildcardHeaders()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.allowedHeaders", "*" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Access-Control-Request-Headers" ) ).thenReturn( "X-Custom, Authorization" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsAllowsWildcardHeaders", config, request );
+    }
+
+    @Test
+    public void testResolveMethodsNormalizedToUppercase()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.methods", "get, post" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveMethodsNormalizedToUppercase", config, request );
+    }
+
+    @Test
     public void testResolveMixedLiteralAndRegex()
     {
         Map<String, String> config = new HashMap<>();

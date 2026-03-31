@@ -57,7 +57,7 @@ cors.maxAge = 3600
 | `cors.origin`        | _(any origin)_   | Allowed origin(s), comma-separated. Omit to reflect/wildcard |
 | `cors.credentials`   | `false`          | Allow credentials. Requires `cors.origin` to be set          |
 | `cors.allowedHeaders`| _(not set)_      | `Access-Control-Allow-Headers` value                         |
-| `cors.methods`       | `POST, OPTIONS`  | `Access-Control-Allow-Methods` value                         |
+| `cors.methods`       | `GET, HEAD, POST`| `Access-Control-Allow-Methods` value                         |
 | `cors.exposedHeaders`| _(not set)_      | Extra response headers to expose beyond the CORS safelist    |
 | `cors.maxAge`        | _(not set)_      | Preflight cache duration in seconds                          |
 

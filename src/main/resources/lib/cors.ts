@@ -14,7 +14,9 @@
  *                         Access-Control-Request-Headers is present, that value
  *                         is reflected back. When configured, preflight requests
  *                         for disallowed headers are rejected (403)
- * - cors.methods       — comma-separated (default: 'POST, OPTIONS')
+ * - cors.methods       — comma-separated (default: 'GET, HEAD, POST').
+ *                         Preflight requests for disallowed methods
+ *                         are rejected (403)
  * - cors.exposedHeaders — comma-separated (headers the browser may access)
  * - cors.maxAge        — preflight cache seconds
  *
@@ -61,7 +63,7 @@ type CorsResponse = {
     headers: CorsHeaders;
 };
 
-const DEFAULT_METHODS = 'POST, OPTIONS';
+const DEFAULT_METHODS = 'GET, HEAD, POST';
 
 /**
  * Resolves CORS headers based on configuration and request.
@@ -135,7 +137,13 @@ export function resolveHeaders(config: CorsConfig, req: CorsRequest): CorsHeader
     if (allowHeaders) {
         headers['access-control-allow-headers'] = allowHeaders;
     }
-    headers['access-control-allow-methods'] = config['cors.methods'] || DEFAULT_METHODS;
+    const methods = config['cors.methods'] || DEFAULT_METHODS;
+    headers['access-control-allow-methods'] =
+        methods.trim() === '*'
+            ? '*'
+            : parseCommaSeparatedList(methods)
+                  .map((m) => m.toUpperCase())
+                  .join(', ');
 
     const exposedHeaders = parseCommaSeparatedList(config['cors.exposedHeaders']);
     if (exposedHeaders.length > 0) {
@@ -172,6 +180,7 @@ function isPreflightHeadersAllowed(config: CorsConfig, req: CorsRequest): boolea
     const allowedHeaders = config['cors.allowedHeaders'];
     const requestedHeaders = req.getHeader('Access-Control-Request-Headers');
     if (!(allowedHeaders && requestedHeaders)) return true;
+    if (allowedHeaders.trim() === '*') return true;
 
     const allowed = parseCommaSeparatedList(allowedHeaders);
     const requested = parseCommaSeparatedList(requestedHeaders);
@@ -190,10 +199,37 @@ function isPreflightHeadersAllowed(config: CorsConfig, req: CorsRequest): boolea
 }
 
 /**
+ * Checks whether the method in `Access-Control-Request-Method` is present
+ * in the configured `cors.methods` (or the default method list).
+ *
+ * Returns `true` (allowed) when:
+ * - `Access-Control-Request-Method` is absent, or
+ * - `cors.methods` is `'*'`, or
+ * - the requested method appears in the allowed set (case-insensitive).
+ */
+function isPreflightMethodAllowed(config: CorsConfig, req: CorsRequest): boolean {
+    const requestedMethod = req.getHeader('Access-Control-Request-Method');
+    if (!requestedMethod) return true;
+
+    const methods = config['cors.methods'] || DEFAULT_METHODS;
+    if (methods.trim() === '*') return true;
+
+    const allowed = parseCommaSeparatedList(methods);
+    const method = requestedMethod.trim().toUpperCase();
+
+    for (let i = 0; i < allowed.length; i++) {
+        if (allowed[i].toUpperCase() === method) return true;
+    }
+    return false;
+}
+
+/**
  * Resolves a preflight response based on configuration and request.
  *
- * If `cors.allowedHeaders` is configured and the request asks for headers
- * not in that list, responds with 403 and no CORS headers.
+ * Rejects with 403 (no CORS headers) when:
+ * - `cors.allowedHeaders` is configured and the request asks for
+ *   headers not in that list, or
+ * - `Access-Control-Request-Method` names a method not in the allowed set.
  *
  * @param config - Key-value config map (typically `app.config`).
  * @param req - Incoming request with a `getHeader` method.
@@ -204,7 +240,7 @@ export function resolveOptionsResponse(config: CorsConfig, req: CorsRequest): Co
     if (config['cors.enabled'] === 'false') {
         return { status: 204, headers: {} };
     }
-    if (!isPreflightHeadersAllowed(config, req)) {
+    if (!(isPreflightMethodAllowed(config, req) && isPreflightHeadersAllowed(config, req))) {
         return { status: 403, headers: {} };
     }
     return {
@@ -216,8 +252,8 @@ export function resolveOptionsResponse(config: CorsConfig, req: CorsRequest): Co
 /**
  * Returns a 204 preflight response with CORS headers from `app.config`.
  *
- * If `cors.allowedHeaders` is configured and the request asks for headers
- * not in that list, responds with 403 and no CORS headers.
+ * Rejects with 403 (no CORS headers) when the preflight requests a
+ * disallowed method or header.
  *
  * @param req - Incoming request with a `getHeader` method.
  * @returns Object with `status: 204` and resolved CORS headers,
