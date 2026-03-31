@@ -91,6 +91,20 @@ public class CorsHeadersTest
     }
 
     @Test
+    public void testResolveCorsHeadersReflectsRequestedHeadersWhenAllowedHeadersMissing()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "http://test-cors.com:3000" );
+        when( request.getHeader( "Access-Control-Request-Headers" ) ).thenReturn( "Content-Type, X-Trace-Id" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js",
+                     "testResolveCorsHeadersReflectsRequestedHeadersWhenAllowedHeadersMissing", config, request );
+    }
+
+    @Test
     public void testResolveMultiOriginMatch()
     {
         Map<String, String> config = new HashMap<>();
@@ -221,6 +235,49 @@ public class CorsHeadersTest
         when( request.getHeader( "Origin" ) ).thenReturn( "https://evil.com" );
 
         runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveRegexOriginMismatch", config, request );
+    }
+
+    @Test
+    public void testResolveOptionsWhenDisabled()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "false" );
+        config.put( "cors.allowedHeaders", "Content-Type" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Access-Control-Request-Headers" ) ).thenReturn( "X-Evil-Header" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsWhenDisabled", config, request );
+    }
+
+    @Test
+    public void testResolveOptionsRejectsDisallowedHeaders()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "http://test-cors.com:3000" );
+        config.put( "cors.allowedHeaders", "Content-Type, Authorization" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "http://test-cors.com:3000" );
+        when( request.getHeader( "Access-Control-Request-Headers" ) ).thenReturn( "Content-Type, X-Evil-Header" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsRejectsDisallowedHeaders", config, request );
+    }
+
+    @Test
+    public void testResolveOptionsAllowsConfiguredHeaders()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.enabled", "true" );
+        config.put( "cors.origin", "http://test-cors.com:3000" );
+        config.put( "cors.allowedHeaders", "Content-Type, Authorization" );
+
+        HttpServletRequest request = mock( HttpServletRequest.class );
+        when( request.getHeader( "Origin" ) ).thenReturn( "http://test-cors.com:3000" );
+        when( request.getHeader( "Access-Control-Request-Headers" ) ).thenReturn( "Content-Type, Authorization" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveOptionsAllowsConfiguredHeaders", config, request );
     }
 
     @Test

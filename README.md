@@ -56,10 +56,12 @@ cors.maxAge = 3600
 | `cors.enabled`       | `true`           | Set to `false` to disable CORS headers entirely              |
 | `cors.origin`        | _(any origin)_   | Allowed origin(s), comma-separated. Omit to reflect/wildcard |
 | `cors.credentials`   | `false`          | Allow credentials. Requires `cors.origin` to be set          |
-| `cors.allowedHeaders`| `Content-Type`   | `Access-Control-Allow-Headers` value                         |
+| `cors.allowedHeaders`| _(not set)_      | `Access-Control-Allow-Headers` value                         |
 | `cors.methods`       | `POST, OPTIONS`  | `Access-Control-Allow-Methods` value                         |
 | `cors.exposedHeaders`| _(not set)_      | Extra response headers to expose beyond the CORS safelist    |
 | `cors.maxAge`        | _(not set)_      | Preflight cache duration in seconds                          |
+
+If `cors.allowedHeaders` is not configured and a request includes `Access-Control-Request-Headers`, that value is reflected in `Access-Control-Allow-Headers`.
 
 `cors.exposedHeaders` is a comma-separated list of header names. The library normalizes whitespace and removes duplicates before sending `Access-Control-Expose-Headers`.
 
