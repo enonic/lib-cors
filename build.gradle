@@ -1,0 +1,94 @@
+import com.github.gradle.node.pnpm.task.PnpmTask
+
+plugins {
+    id 'java'
+    id 'maven-publish'
+    alias( libs.plugins.enonic.defaults )
+    alias( libs.plugins.enonic.xp.base )
+    alias( libs.plugins.node.gradle )
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    xp.enonicRepo()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of( 11 )
+    }
+}
+
+dependencies {
+    compileOnly "com.enonic.xp:script-api:${xpVersion}"
+
+    testImplementation "com.enonic.xp:testing:${xpVersion}"
+    testImplementation( platform( "org.junit:junit-bom:${libs.versions.junit.get()}" ) )
+    testImplementation( platform( "org.mockito:mockito-bom:${libs.versions.mockito.get()}" ) )
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+node {
+    download = true
+    version = '24.14.1'
+    pnpmVersion = '10.12.1'
+}
+
+def environmentShort() {
+    findProperty( 'env' ) == 'dev' ? 'dev' : 'prod'
+}
+
+def nodeEnvironment() {
+    environmentShort() == 'dev' ? 'development' : 'production'
+}
+
+tasks.register( 'pnpmBuild', PnpmTask ) {
+    args = ['run', "build:${environmentShort()}"]
+    environment = [
+        'FORCE_COLOR': 'true',
+        'NODE_ENV'   : nodeEnvironment(),
+    ]
+    inputs.dir 'src/main/resources'
+    inputs.file 'esbuild.config.js'
+    inputs.file 'tsconfig.json'
+    inputs.file 'package.json'
+    outputs.dir 'build/resources/main'
+    dependsOn tasks.named( 'pnpmInstall' )
+}
+
+tasks.register( 'pnpmCheck', PnpmTask ) {
+    args = ['run', 'check']
+    environment = ['FORCE_COLOR': 'true']
+    dependsOn tasks.named( 'pnpmInstall' )
+}
+
+tasks.named( 'jar' ).configure {
+    dependsOn tasks.named( 'pnpmBuild' )
+}
+
+tasks.named( 'compileTestJava' ).configure {
+    dependsOn tasks.named( 'pnpmBuild' )
+}
+
+tasks.register( 'pnpmTest', PnpmTask ) {
+    args = ['run', 'test']
+    environment = ['FORCE_COLOR': 'true']
+    dependsOn tasks.named( 'pnpmInstall' )
+}
+
+tasks.named( 'check' ).configure {
+    dependsOn tasks.named( 'pnpmCheck' )
+    dependsOn tasks.named( 'pnpmTest' )
+}
+
+tasks.named( 'processResources' ).configure {
+    exclude '**/*.ts'
+    exclude '**/tsconfig.json'
+}

@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": ">=24.14.1",
+    "pnpm": ">=10.12.1"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "pnpm build:dev",
+    "build:prod": "NODE_ENV=production node esbuild.config.js",
+    "build:dev": "node esbuild.config.js",
+    "check": "pnpm check:lint && pnpm check:types",
+    "check:lint": "biome check .",
+    "check:types": "tsc --noEmit",
+    "test": "node --test src/test/node/util.test.ts",
+    "fix": "biome check . --fix",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "~2.4.4",
+    "@enonic-types/core": "^7.16.2",
+    "@enonic-types/global": "^7.16.2",
+    "esbuild": "~0.25.5",
+    "husky": "^9.1.7",
+    "typescript": "~5.8.3"
+  }
+}
