@@ -1,0 +1,332 @@
+= CORS Library
+:toc: right
+
+== Introduction
+
+A library for handling CORS (Cross-Origin Resource Sharing) headers in Enonic XP controllers and filters. Targets XP 7+ (Nashorn).
+
+CORS lets browsers safely make cross-origin requests. This library reads your application's `.cfg` file and produces the correct `Access-Control-*` response headers, including full preflight (OPTIONS) handling with origin matching, method validation, and header validation.
+
+== Installation
+
+Add the dependency to your `build.gradle` file:
+
+[source,groovy]
+----
+dependencies {
+    include 'com.enonic.lib:lib-cors:${libVersion}'
+}
+----
+
+== Usage
+
+Import the library in a controller or filter:
+
+[source,js]
+----
+var corsLib = require('/lib/cors');
+----
+
+=== Controller
+
+Handle preflight requests with `respondOptions` and attach CORS headers to regular responses with `getHeaders`:
+
+[source,js]
+----
+var corsLib = require('/lib/cors');
+
+// Preflight (OPTIONS) — returns 204 with CORS headers, or 403 on rejection
+exports.options = function (req) {
+    return corsLib.respondOptions(req);
+};
+
+// Regular request — merge CORS headers into the response
+exports.post = function (req) {
+    return {
+        contentType: 'application/json',
+        headers: corsLib.getHeaders(req),
+        body: JSON.stringify({ result: 'ok' }),
+    };
+};
+----
+
+Both `getHeaders` and `respondOptions` read configuration from `app.config` automatically.
+
+=== Filter
+
+Use the library as an XP filter to apply CORS headers across multiple controllers from a single place:
+
+[source,js]
+----
+var corsLib = require('/lib/cors');
+
+exports.filter = function (req, next) {
+    if (req.method === 'OPTIONS') {
+        return corsLib.respondOptions(req);
+    }
+
+    var response = next(req);
+    var corsHeaders = corsLib.getHeaders(req);
+
+    response.headers = response.headers || {};
+    for (var key in corsHeaders) {
+        if (corsHeaders.hasOwnProperty(key)) {
+            response.headers[key] = corsHeaders[key];
+        }
+    }
+    return response;
+};
+----
+
+Register the filter in your `site.xml` (or equivalent descriptor) as described in the link:https://developer.enonic.com/docs/xp/stable/framework/filters[XP filter documentation].
+
+=== Explicit configuration
+
+Pass a config map directly with `resolveHeaders` or `resolveOptionsResponse` instead of relying on `app.config`:
+
+[source,js]
+----
+var corsLib = require('/lib/cors');
+
+var config = {
+    'cors.origin': 'https://example.com',
+    'cors.credentials': 'true',
+};
+
+exports.options = function (req) {
+    return corsLib.resolveOptionsResponse(config, req);
+};
+
+exports.post = function (req) {
+    return {
+        contentType: 'application/json',
+        headers: corsLib.resolveHeaders(config, req),
+        body: JSON.stringify({ result: 'ok' }),
+    };
+};
+----
+
+== Configuration
+
+Add a configuration file for the consuming application (e.g. `com.example.myapp.cfg`) to the XP configuration folder:
+
+[source,properties]
+----
+cors.origin = https://example.com, https://admin.example.com
+cors.credentials = true
+cors.allowedHeaders = Content-Type, Authorization
+cors.methods = POST, GET
+cors.exposedHeaders = X-Request-Id
+cors.maxAge = 3600
+----
+
+[%header,cols="2,1,5"]
+|===
+| Key | Default | Description
+
+| `cors.origin`
+| _(not set)_
+| Allowed origin(s). When omitted, CORS is disabled and no headers are added. See <<origin-matching>> below.
+
+| `cors.credentials`
+| `false`
+| Set to `true` to send `Access-Control-Allow-Credentials: true`. Ignored (and not sent) when the resolved origin is `*`.
+
+| `cors.allowedHeaders`
+| _(not set)_
+| Value for `Access-Control-Allow-Headers`. When omitted and the request includes `Access-Control-Request-Headers`, that value is reflected back. When configured, preflight requests for headers outside this list are rejected with `403`.
+
+| `cors.methods`
+| `GET, HEAD, POST`
+| Value for `Access-Control-Allow-Methods`. Preflight requests for methods outside this list are rejected with `403`.
+
+| `cors.exposedHeaders`
+| _(not set)_
+| Comma-separated list of extra response headers to expose to the browser via `Access-Control-Expose-Headers`. Duplicates are removed automatically.
+
+| `cors.maxAge`
+| _(not set)_
+| Preflight cache duration in seconds (`Access-Control-Max-Age`).
+|===
+
+[#origin-matching]
+=== Origin matching
+
+The `cors.origin` property supports several formats:
+
+`*`:: Responds with `Access-Control-Allow-Origin: *` for every request. Cannot be combined with `cors.credentials = true`.
+
+Literal origin:: A plain `https://example.com` value. The incoming `Origin` header is compared against each entry in the comma-separated list. On a match, the request origin is reflected back and `Vary: Origin` is set. On no match, only `Vary: Origin` is returned.
+
+`~`-prefixed regex:: A pattern starting with `~` is treated as a regular expression anchored to the full origin string. For example, `~https://.*\.example\.com` matches any subdomain of `example.com`. Multiple patterns can be mixed with literals in the same comma-separated list.
+
+`~.*`:: Reflects any origin back verbatim. Unlike `*`, this variant is compatible with `cors.credentials = true`.
+
+[source,properties]
+----
+# Literal origins
+cors.origin = https://example.com, https://admin.example.com
+
+# Regex: any subdomain of example.com
+cors.origin = ~https://.*\.example\.com
+
+# Mixed: literal and regex
+cors.origin = https://example.com, ~https://.*\.dev\.example\.com
+
+# Reflect any origin (supports credentials)
+cors.origin = ~.*
+----
+
+== API
+
+The library exposes four functions:
+
+=== `getHeaders(req)`
+
+Returns CORS headers derived from `app.config` for use in regular (non-preflight) responses.
+
+[.lead]
+Parameters
+
+[%header,cols="1,1,4"]
+|===
+| Name | Type | Description
+
+| `req`
+| object
+| Incoming XP request object (must expose a `getHeader(name)` method).
+|===
+
+[.lead]
+Returns
+
+*object* — Key/value map of CORS headers to merge into the response `headers` field. Returns an empty object when CORS is disabled or the origin does not match.
+
+[.lead]
+Example
+
+[source,js]
+----
+exports.get = function (req) {
+    return {
+        contentType: 'application/json',
+        headers: corsLib.getHeaders(req),
+        body: JSON.stringify({ result: 'ok' }),
+    };
+};
+----
+
+---
+
+=== `respondOptions(req)`
+
+Returns a complete preflight response derived from `app.config`.
+
+[.lead]
+Parameters
+
+[%header,cols="1,1,4"]
+|===
+| Name | Type | Description
+
+| `req`
+| object
+| Incoming XP request object (must expose a `getHeader(name)` method).
+|===
+
+[.lead]
+Returns
+
+*object* — `{ status: 204, headers: { ... } }` on success, or `{ status: 403, headers: {} }` when the preflight requests a disallowed method or header.
+
+[.lead]
+Example
+
+[source,js]
+----
+exports.options = function (req) {
+    return corsLib.respondOptions(req);
+};
+----
+
+---
+
+=== `resolveHeaders(config, req)`
+
+Low-level variant of `getHeaders` that accepts an explicit config map instead of reading `app.config`.
+
+[.lead]
+Parameters
+
+[%header,cols="1,1,4"]
+|===
+| Name | Type | Description
+
+| `config`
+| object
+| Key/value map of configuration properties (same keys as the `.cfg` file).
+
+| `req`
+| object
+| Incoming XP request object (must expose a `getHeader(name)` method).
+|===
+
+[.lead]
+Returns
+
+*object* — Key/value map of CORS headers.
+
+[.lead]
+Example
+
+[source,js]
+----
+var config = { 'cors.origin': '~.*', 'cors.credentials': 'true' };
+
+exports.get = function (req) {
+    return {
+        contentType: 'application/json',
+        headers: corsLib.resolveHeaders(config, req),
+        body: JSON.stringify({ result: 'ok' }),
+    };
+};
+----
+
+---
+
+=== `resolveOptionsResponse(config, req)`
+
+Low-level variant of `respondOptions` that accepts an explicit config map.
+
+[.lead]
+Parameters
+
+[%header,cols="1,1,4"]
+|===
+| Name | Type | Description
+
+| `config`
+| object
+| Key/value map of configuration properties.
+
+| `req`
+| object
+| Incoming XP request object (must expose a `getHeader(name)` method).
+|===
+
+[.lead]
+Returns
+
+*object* — `{ status: 204, headers: { ... } }` on success, or `{ status: 403, headers: {} }` on rejection.
+
+[.lead]
+Example
+
+[source,js]
+----
+var config = { 'cors.origin': 'https://example.com', 'cors.methods': 'GET, POST' };
+
+exports.options = function (req) {
+    return corsLib.resolveOptionsResponse(config, req);
+};
+----
