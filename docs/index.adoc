@@ -14,7 +14,7 @@ Add the dependency to your `build.gradle` file:
 [source,groovy]
 ----
 dependencies {
-    include 'com.enonic.lib:lib-cors:${libVersion}'
+    include "com.enonic.lib:lib-cors:${libVersion}"
 }
 ----
 
