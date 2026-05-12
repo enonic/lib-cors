@@ -12,11 +12,11 @@ importers:
         specifier: ~2.4.4
         version: 2.4.9
       '@enonic-types/core':
-        specifier: ^7.16.2
-        version: 7.16.2
+        specifier: ^7.16.3
+        version: 7.16.3
       '@enonic-types/global':
-        specifier: ^7.16.2
-        version: 7.16.2
+        specifier: ^7.16.3
+        version: 7.16.3
       esbuild:
         specifier: ~0.25.5
         version: 0.25.12
@@ -82,11 +82,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@enonic-types/core@7.16.2':
-    resolution: {integrity: sha512-rOhH1Xh2u7Nt/4SYsQbPn8uc/GxM5tciYNYTN8+Grn/YMM71abaBiC/zb9c2KY37lZOoLRWbelZrLp/SpaDtHw==}
+  '@enonic-types/core@7.16.3':
+    resolution: {integrity: sha512-0TbkNHMO9xir/m92RavXL6XIM4L4zA5J4Tk1ettODrX+3YfcoFAXiGlPQanD0k4o3s79D0ZYPw2QKPhA2/OAdw==}
 
-  '@enonic-types/global@7.16.2':
-    resolution: {integrity: sha512-0re7HPPYw/PduCMt/WkgUBVqx9W2gDwwOWyoeM5nrl5GmKRxZLiXu9spWSRz5TAk6wDp2HUBRxbdna9frWueuQ==}
+  '@enonic-types/global@7.16.3':
+    resolution: {integrity: sha512-dEMj48NHDSXVBK4c7eRZAGoh/3xM42Sbf0ZmsnQqxpB69SBfht5m6hXR/weHbnj1mhYPyjWCyB56R3Uhy7NLFg==}
 
   '@esbuild/aix-ppc64@0.25.12':
     resolution: {integrity: sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==}
@@ -296,11 +296,11 @@ snapshots:
   '@biomejs/cli-win32-x64@2.4.9':
     optional: true
 
-  '@enonic-types/core@7.16.2': {}
+  '@enonic-types/core@7.16.3': {}
 
-  '@enonic-types/global@7.16.2':
+  '@enonic-types/global@7.16.3':
     dependencies:
-      '@enonic-types/core': 7.16.2
+      '@enonic-types/core': 7.16.3
 
   '@esbuild/aix-ppc64@0.25.12':
     optional: true
