@@ -1,5 +1,5 @@
 var testingLib = require('/lib/xp/testing');
-var corsLib = require('/lib/cors');
+var corsLib = require('/lib/enonic/cors');
 
 exports.testResolveWhenCorsOriginNotSet = function (config, req) {
     var headers = corsLib.resolveHeaders(config, req);

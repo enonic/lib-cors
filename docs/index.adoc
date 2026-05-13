@@ -24,7 +24,7 @@ Import the library in a controller or filter:
 
 [source,js]
 ----
-var corsLib = require('/lib/cors');
+var corsLib = require('/lib/enonic/cors');
 ----
 
 === Controller
@@ -33,7 +33,7 @@ Handle preflight requests with `respondOptions` and attach CORS headers to regul
 
 [source,js]
 ----
-var corsLib = require('/lib/cors');
+var corsLib = require('/lib/enonic/cors');
 
 // Preflight (OPTIONS) — returns 204 with CORS headers, or 403 on rejection
 exports.options = function (req) {
@@ -58,7 +58,7 @@ Use the library as an XP filter to apply CORS headers across multiple controller
 
 [source,js]
 ----
-var corsLib = require('/lib/cors');
+var corsLib = require('/lib/enonic/cors');
 
 exports.filter = function (req, next) {
     if (req.method === 'OPTIONS') {
@@ -86,7 +86,7 @@ Pass a config map directly with `resolveHeaders` or `resolveOptionsResponse` ins
 
 [source,js]
 ----
-var corsLib = require('/lib/cors');
+var corsLib = require('/lib/enonic/cors');
 
 var config = {
     'cors.origin': 'https://example.com',

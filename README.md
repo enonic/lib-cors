@@ -17,7 +17,7 @@ dependencies {
 Use in a controller:
 
 ```js
-var corsLib = require('/lib/cors');
+var corsLib = require('/lib/enonic/cors');
 
 // Preflight (OPTIONS)
 exports.options = function(req) {
