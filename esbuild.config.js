@@ -6,7 +6,7 @@ const SRC = 'src/main/resources';
 const OUT = 'build/resources/main';
 
 await build({
-    entryPoints: [`${SRC}/lib/cors.ts`],
+    entryPoints: [`${SRC}/lib/enonic/cors.ts`],
     outdir: OUT,
     outbase: SRC,
     bundle: true,

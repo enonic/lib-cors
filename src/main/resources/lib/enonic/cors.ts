@@ -23,7 +23,7 @@
  *
  * Usage in an XP controller:
  * ```js
- * var corsLib = require('/lib/cors');
+ * var corsLib = require('/lib/enonic/cors');
  *
  * // Option A: use app.config automatically
  * exports.options = function(req) {
@@ -49,7 +49,7 @@
  * ```
  */
 
-import { matchOrigin, parseCommaSeparatedList } from './util';
+import { matchOrigin, parseCommaSeparatedList } from '../util';
 
 type CorsConfig = Record<string, string | undefined>;
 
