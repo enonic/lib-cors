@@ -23,6 +23,6 @@
     "@enonic-types/global": "^8.0.0-B4",
     "esbuild": "~0.25.5",
     "husky": "^9.1.7",
-    "typescript": "~5.8.3"
+    "typescript": "~6.0.3"
   }
 }
