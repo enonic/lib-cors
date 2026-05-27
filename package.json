@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "pnpm build:dev",
-    "build:prod": "NODE_ENV=production node esbuild.config.js",
+    "build:prod": "cross-env NODE_ENV=production node esbuild.config.js",
     "build:dev": "node esbuild.config.js",
     "check": "pnpm check:lint && pnpm check:types",
     "check:lint": "biome check .",
@@ -21,6 +21,7 @@
     "@biomejs/biome": "~2.4.4",
     "@enonic-types/core": "^8.0.0-B4",
     "@enonic-types/global": "^8.0.0-B4",
+    "cross-env": "^10.1.0",
     "esbuild": "~0.25.5",
     "husky": "^9.1.7",
     "typescript": "~5.8.3"
