@@ -1,14 +1,14 @@
 {
   "private": true,
-  "packageManager": "pnpm@10.12.1",
+  "packageManager": "pnpm@10.33.4",
   "engines": {
-    "node": ">=24.14.1",
-    "pnpm": ">=10.12.1"
+    "node": ">=24.16.0",
+    "pnpm": ">=10.33.4"
   },
   "type": "module",
   "scripts": {
     "build": "pnpm build:dev",
-    "build:prod": "NODE_ENV=production node esbuild.config.js",
+    "build:prod": "cross-env NODE_ENV=production node esbuild.config.js",
     "build:dev": "node esbuild.config.js",
     "check": "pnpm check:lint && pnpm check:types",
     "check:lint": "biome check .",
@@ -18,10 +18,11 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "~2.4.4",
-    "@enonic-types/core": "^8.0.0-B4",
-    "@enonic-types/global": "^8.0.0-B4",
-    "esbuild": "~0.25.5",
+    "@biomejs/biome": "~2.4.15",
+    "@enonic-types/core": "^8.0.0-B5",
+    "@enonic-types/global": "^8.0.0-B5",
+    "cross-env": "^10.1.0",
+    "esbuild": "~0.28.0",
     "husky": "^9.1.7",
     "typescript": "~5.8.3"
   }
