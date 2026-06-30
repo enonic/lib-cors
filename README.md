@@ -10,7 +10,7 @@ Add the dependency to `build.gradle`:
 
 ```gradle
 dependencies {
-    include 'com.enonic.lib:lib-cors:1.0.0'
+    include 'com.enonic.lib:lib-cors:2.0.0'
 }
 ```
 
