@@ -470,8 +470,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect1">
 <h2 id="introduction"><a class="link" href="#introduction">Introduction</a></h2>
 <div class="sectionbody">
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Versions 1.x target XP 7+.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>A library for handling CORS (Cross-Origin Resource Sharing) headers in Enonic XP controllers and filters. Targets XP 7+ (Nashorn).</p>
+<p>A library for handling CORS (Cross-Origin Resource Sharing) headers in Enonic XP controllers and filters.</p>
 </div>
 <div class="paragraph">
 <p>CORS lets browsers safely make cross-origin requests. This library reads your application&#8217;s <code>.cfg</code> file and produces the correct <code>Access-Control-*</code> response headers, including full preflight (OPTIONS) handling with origin matching, method validation, and header validation.</p>
@@ -918,7 +930,7 @@ exports.options = function (req) {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2026-05-13 07:05:38 UTC
+Last updated 2026-06-30 06:52:05 UTC
 </div>
 </div>
 </body>
