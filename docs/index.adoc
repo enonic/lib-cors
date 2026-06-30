@@ -3,7 +3,9 @@
 
 == Introduction
 
-A library for handling CORS (Cross-Origin Resource Sharing) headers in Enonic XP controllers and filters. Targets XP 7+ (Nashorn).
+NOTE: Versions 2.x target XP 8+.
+
+A library for handling CORS (Cross-Origin Resource Sharing) headers in Enonic XP controllers and filters.
 
 CORS lets browsers safely make cross-origin requests. This library reads your application's `.cfg` file and produces the correct `Access-Control-*` response headers, including full preflight (OPTIONS) handling with origin matching, method validation, and header validation.
 
