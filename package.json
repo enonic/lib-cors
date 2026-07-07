@@ -18,7 +18,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@biomejs/biome": "~2.4.15",
+    "@biomejs/biome": "~2.5.2",
     "@enonic-types/core": "^8.0.3",
     "@enonic-types/global": "^8.0.3",
     "cross-env": "^10.1.0",
