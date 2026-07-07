@@ -12,11 +12,11 @@ importers:
         specifier: ~2.4.15
         version: 2.4.15
       '@enonic-types/core':
-        specifier: ^8.0.0
-        version: 8.0.0
+        specifier: ^8.0.3
+        version: 8.0.3
       '@enonic-types/global':
-        specifier: ^8.0.0
-        version: 8.0.0
+        specifier: ^8.0.3
+        version: 8.0.3
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -89,11 +89,11 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@enonic-types/core@8.0.0':
-    resolution: {integrity: sha512-t93pLDJbyoJGRJ1Qlm+EWpRyClRo2sA5cn+mDS9zoN5687zqroUr2+kAlX0FarHx5bwnRqZq8Pdf1nRnEaVDNw==}
+  '@enonic-types/core@8.0.3':
+    resolution: {integrity: sha512-8A5loeFE6KNV/1yEtQpWK1gAc914LdTHGl4+1HbCM4qYFq1XvjSNgFUpRnPvDP6CQXpB0j4zWsUu883ULSKTjg==}
 
-  '@enonic-types/global@8.0.0':
-    resolution: {integrity: sha512-RYPrl8RN20qNnCBSUUZaiHNEnjxVTz7XSpd5INKzbTzKDXz576JkOEVxr9EKe/i1lOVlzoKl+hBRvQS2aELecg==}
+  '@enonic-types/global@8.0.3':
+    resolution: {integrity: sha512-ZHiTuBlcCVvjL7SLnJZ0or3GXEwFN5BAYaGQnG+jv3j8WBkqa/2yG9qUif/cTIY7W2/kLgy3ZoSPxM+0ekEPrA==}
 
   '@epic-web/invariant@1.0.0':
     resolution: {integrity: sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==}
@@ -335,11 +335,11 @@ snapshots:
   '@biomejs/cli-win32-x64@2.4.15':
     optional: true
 
-  '@enonic-types/core@8.0.0': {}
+  '@enonic-types/core@8.0.3': {}
 
-  '@enonic-types/global@8.0.0':
+  '@enonic-types/global@8.0.3':
     dependencies:
-      '@enonic-types/core': 8.0.0
+      '@enonic-types/core': 8.0.3
 
   '@epic-web/invariant@1.0.0': {}
 
