@@ -303,4 +303,122 @@ public class CorsHeadersTest
 
         runFunction( "/com/enonic/lib/cors/test-cors.js", "testResolveMixedLiteralAndRegex", config, request );
     }
+
+    @Test
+    public void testWebSocketValidatorNotConfigured()
+    {
+        Map<String, String> config = new HashMap<>();
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorNotConfigured", config, "https",
+                     "api.example.com", 443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorWildcard()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "*" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorWildcard", config, "https", "api.example.com", 443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorExactMatch()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "https://console.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorExactMatch", config, "https", "api.example.com", 443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorCommaList()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "http://a.com, http://b.com, http://c.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorCommaList", config, "https", "api.example.com", 443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorRegex()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "~https://.*\\.example\\.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorRegex", config, "https", "api.other.com", 443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorAcceptsOwnOrigin()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "https://console.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorAcceptsOwnOrigin", config, "https", "api.example.com",
+                     443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorOwnOriginKeepsNonDefaultPort()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "https://console.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorOwnOriginKeepsNonDefaultPort", config, "http", "localhost",
+                     8080 );
+    }
+
+    @Test
+    public void testWebSocketValidatorWithoutOwnOrigin()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "https://console.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorWithoutOwnOrigin", config, null, null, null );
+    }
+
+    @Test
+    public void testWebSocketValidatorAbsentOrigin()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "https://console.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorAbsentOrigin", config, "https", "api.example.com", 443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorOpaqueOrigin()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "https://console.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorOpaqueOrigin", config, "https", "api.example.com", 443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorOpaqueOriginOptIn()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "null" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorOpaqueOriginOptIn", config, "https", "api.example.com",
+                     443 );
+    }
+
+    @Test
+    public void testWebSocketValidatorInvalidRegexFailsClosed()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "~[invalid" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorInvalidRegexFailsClosed", config, "https",
+                     "api.example.com", 443 );
+    }
+
+    @Test
+    public void testGetRequestOrigin()
+    {
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testGetRequestOrigin" );
+    }
 }

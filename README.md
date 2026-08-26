@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/enonic/lib-cors)](https://github.com/enonic/lib-cors/blob/master/LICENSE)
 
-CORS (Cross-Origin Resource Sharing) header handling for Enonic XP controllers and filters. Targets XP 7+.
+CORS (Cross-Origin Resource Sharing) header handling for Enonic XP controllers and filters, plus an origin validator for WebSocket upgrades. Targets XP 8+.
 
 ## Usage
 
@@ -37,6 +37,28 @@ exports.post = function(req) {
 `getHeaders(req)` and `respondOptions(req)` read from `app.config` automatically.
 For explicit config, use `resolveHeaders(config, req)` instead.
 
+### WebSocket upgrades
+
+XP runs its own same-origin check on a WebSocket upgrade and rejects a cross-origin
+client with `403` before the controller's response headers matter. Returning a
+`checkOrigin` predicate replaces that check with the `cors.origin` allowlist:
+
+```js
+exports.get = function(req) {
+    return {
+        webSocket: {
+            data: {},
+            checkOrigin: corsLib.getWebSocketOriginValidator(req),
+        },
+    };
+};
+```
+
+The predicate accepts the app's own origin as well as the configured ones — XP does
+not fall back to its same-origin check once a validator is supplied. When
+`cors.origin` is not set, `undefined` is returned and XP's default check stays in
+place. For explicit config, use `resolveWebSocketOriginValidator(config, req)`.
+
 ## Configuration
 
 Add to the consuming app's `.cfg` file (e.g. `com.example.myapp.cfg`):
@@ -66,6 +88,11 @@ If `cors.allowedHeaders` is not configured and a request includes `Access-Contro
 `cors.exposedHeaders` is a comma-separated list of header names. The library normalizes whitespace and removes duplicates before sending `Access-Control-Expose-Headers`.
 
 If you configure `cors.exposedHeaders = *`, browsers only treat `*` as a wildcard for non-credentialed requests.
+
+`cors.origin` drives the WebSocket validator too, with two deliberate differences: a request with no
+`Origin` header is accepted (non-browser clients send none, and cross-site hijacking needs a browser
+to send one), and an unset `cors.origin` leaves XP's same-origin check in place rather than
+disabling anything.
 
 ## Building
 

@@ -1,8 +1,9 @@
 /**
  * CORS (Cross-Origin Resource Sharing) library for Enonic XP.
  *
- * Provides utilities for handling CORS headers in XP controllers and filters.
- * Targets XP 7+ (Nashorn).
+ * Provides utilities for handling CORS headers in XP controllers and filters,
+ * plus an origin validator for WebSocket upgrades driven by the same allowlist.
+ * Targets XP 8+.
  *
  * Configuration via app .cfg file:
  * - cors.origin        — allowed origin(s): '*' to allow all, comma-separated list of
@@ -46,6 +47,16 @@
  *         body: { result: 'ok' },
  *     };
  * };
+ *
+ * // WebSocket upgrade — replaces XP's same-origin check with the cors.origin allowlist
+ * exports.get = function(req) {
+ *     return {
+ *         webSocket: {
+ *             data: {},
+ *             checkOrigin: corsLib.getWebSocketOriginValidator(req),
+ *         },
+ *     };
+ * };
  * ```
  */
 
@@ -63,6 +74,14 @@ type CorsResponse = {
     status: number;
     headers: CorsHeaders;
 };
+
+type OriginRequest = {
+    scheme?: string;
+    host?: string;
+    port?: number | string;
+};
+
+type OriginValidator = (origin?: string | null) => boolean;
 
 const DEFAULT_METHODS = 'GET, HEAD, POST';
 
@@ -252,4 +271,97 @@ export function resolveOptionsResponse(config: CorsConfig, req: CorsRequest): Co
  */
 export function respondOptions(req: CorsRequest): CorsResponse {
     return resolveOptionsResponse(app.config, req);
+}
+
+/**
+ * Builds the origin a browser would send for a request to this app, normalized
+ * the way RFC 6454 and XP's same-origin check normalize it: the port is omitted
+ * when it is the scheme's default.
+ *
+ * @param req - Incoming request exposing `scheme`, `host` and `port`.
+ * @returns The app's own origin, or `undefined` when scheme or host is missing.
+ */
+export function getRequestOrigin(req: OriginRequest): string | undefined {
+    const scheme = req.scheme;
+    const host = req.host;
+    if (!(scheme && host)) {
+        return undefined;
+    }
+
+    const port = req.port;
+    const defaultPort = scheme === 'https' ? 443 : 80;
+    if (!port || Number(port) === defaultPort) {
+        return `${scheme}://${host}`;
+    }
+
+    return `${scheme}://${host}:${port}`;
+}
+
+/**
+ * Resolves a `checkOrigin` predicate for a WebSocket upgrade response, driven by
+ * the same `cors.origin` allowlist as the HTTP headers.
+ *
+ * Supplying `checkOrigin` *replaces* XP's same-origin check on the handshake
+ * rather than widening it, so the predicate re-grants the app's own origin
+ * alongside the configured ones.
+ *
+ * XP invokes it after the controller has returned, passing only the origin
+ * string, so everything it needs is captured here by closure.
+ *
+ * - `cors.origin` not set — returns `undefined`, leaving XP's check in place.
+ *   Unlike the HTTP side, where an unset origin disables CORS, "no override" is
+ *   the safe fallback for an upgrade.
+ * - `cors.origin` is `'*'` — accepts any origin.
+ * - Otherwise — accepts the request's own origin, plus any entry of the
+ *   comma-separated list that matches (literal or `~`-prefixed regex).
+ * - An absent `Origin` is accepted. An empty one is not: like the opaque origin
+ *   `'null'`, it is an ordinary string and is rejected unless an entry matches it.
+ *
+ * @param config - Key-value config map (typically `app.config`).
+ * @param req - Incoming request exposing `scheme`, `host` and `port`.
+ * @returns A `checkOrigin` predicate, or `undefined` to keep XP's default check.
+ */
+export function resolveWebSocketOriginValidator(config: CorsConfig, req: OriginRequest): OriginValidator | undefined {
+    const configuredOrigin = config['cors.origin'];
+    if (!configuredOrigin) {
+        return undefined;
+    }
+
+    if (configuredOrigin === '*') {
+        return () => true;
+    }
+
+    const allowedOrigins = parseCommaSeparatedList(configuredOrigin);
+    const ownOrigin = getRequestOrigin(req);
+
+    return (origin?: string | null): boolean => {
+        // Accepted, as XP's own same-origin check accepts it: non-browser clients
+        // send no Origin, and cross-site hijacking requires a browser to send one.
+        // An empty value is a present header, not an absent one, and XP rejects it.
+        if (origin == null) {
+            return true;
+        }
+
+        if (origin === ownOrigin) {
+            return true;
+        }
+
+        for (let i = 0; i < allowedOrigins.length; i++) {
+            if (matchOrigin(allowedOrigins[i], origin)) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+}
+
+/**
+ * Convenience wrapper that resolves a WebSocket `checkOrigin` predicate using `app.config`.
+ *
+ * @param req - Incoming request exposing `scheme`, `host` and `port`.
+ * @returns A `checkOrigin` predicate, or `undefined` to keep XP's default check.
+ */
+export function getWebSocketOriginValidator(req: OriginRequest): OriginValidator | undefined {
+    return resolveWebSocketOriginValidator(app.config, req);
 }
