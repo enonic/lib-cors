@@ -231,6 +231,13 @@ exports.testWebSocketValidatorOwnOriginKeepsNonDefaultPort = function (config, s
     testingLib.assertFalse(validator('http://localhost'), 'own origin without its port should be rejected');
 };
 
+exports.testWebSocketValidatorOwnOriginFromWebSocketScheme = function (config, scheme, host, port) {
+    var validator = corsLib.resolveWebSocketOriginValidator(config, { scheme: scheme, host: host, port: port });
+    testingLib.assertTrue(validator('https://api.example.com'), 'a wss request should match the https origin a browser sends');
+    testingLib.assertFalse(validator('wss://api.example.com'), 'a wss origin is never sent by a browser');
+    testingLib.assertFalse(validator('http://api.example.com'), 'scheme must still match');
+};
+
 exports.testWebSocketValidatorWithoutOwnOrigin = function (config, scheme, host, port) {
     var validator = corsLib.resolveWebSocketOriginValidator(config, { scheme: scheme, host: host, port: port });
     testingLib.assertTrue(validator('https://console.example.com'), 'configured origin should be accepted');
@@ -270,6 +277,10 @@ exports.testGetRequestOrigin = function () {
     testingLib.assertEquals('http://localhost:8080', corsLib.getRequestOrigin({ scheme: 'http', host: 'localhost', port: '8080' }));
     testingLib.assertEquals('https://example.com', corsLib.getRequestOrigin({ scheme: 'https', host: 'example.com' }));
     testingLib.assertEquals('http://example.com:443', corsLib.getRequestOrigin({ scheme: 'http', host: 'example.com', port: 443 }));
+    testingLib.assertEquals('https://example.com', corsLib.getRequestOrigin({ scheme: 'wss', host: 'example.com', port: 443 }));
+    testingLib.assertEquals('http://example.com', corsLib.getRequestOrigin({ scheme: 'ws', host: 'example.com', port: 80 }));
+    testingLib.assertEquals('https://example.com:8443', corsLib.getRequestOrigin({ scheme: 'wss', host: 'example.com', port: 8443 }));
+    testingLib.assertEquals('https://example.com', corsLib.getRequestOrigin({ scheme: 'HTTPS', host: 'Example.COM', port: 443 }));
     testingLib.assertNull(corsLib.getRequestOrigin({ host: 'example.com', port: 443 }));
     testingLib.assertNull(corsLib.getRequestOrigin({ scheme: 'https', port: 443 }));
 };

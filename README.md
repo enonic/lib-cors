@@ -39,9 +39,9 @@ For explicit config, use `resolveHeaders(config, req)` instead.
 
 ### WebSocket upgrades
 
-XP runs its own same-origin check on a WebSocket upgrade and rejects a cross-origin
-client with `403` before the controller's response headers matter. Returning a
-`checkOrigin` predicate replaces that check with the `cors.origin` allowlist:
+XP checks the `Origin` header of a WebSocket upgrade against the app's own origin and
+rejects other origins with `403`. To accept the origins listed in `cors.origin`, return
+a `checkOrigin` predicate in the `webSocket` response:
 
 ```js
 exports.get = function(req) {
@@ -54,10 +54,10 @@ exports.get = function(req) {
 };
 ```
 
-The predicate accepts the app's own origin as well as the configured ones — XP does
-not fall back to its same-origin check once a validator is supplied. When
-`cors.origin` is not set, `undefined` is returned and XP's default check stays in
-place. For explicit config, use `resolveWebSocketOriginValidator(config, req)`.
+XP applies the predicate instead of its own check, so the predicate accepts the app's
+own origin as well as the configured ones. When `cors.origin` is not set, it is
+`undefined` and XP's own check stays in place. For explicit config, use
+`resolveWebSocketOriginValidator(config, req)`.
 
 ## Configuration
 
@@ -89,10 +89,8 @@ If `cors.allowedHeaders` is not configured and a request includes `Access-Contro
 
 If you configure `cors.exposedHeaders = *`, browsers only treat `*` as a wildcard for non-credentialed requests.
 
-`cors.origin` drives the WebSocket validator too, with two deliberate differences: a request with no
-`Origin` header is accepted (non-browser clients send none, and cross-site hijacking needs a browser
-to send one), and an unset `cors.origin` leaves XP's same-origin check in place rather than
-disabling anything.
+The WebSocket predicate returned by `getWebSocketOriginValidator(req)` uses the same `cors.origin`
+list. A request without an `Origin` header is accepted, as in XP's own check.
 
 ## Building
 

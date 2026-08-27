@@ -370,6 +370,16 @@ public class CorsHeadersTest
     }
 
     @Test
+    public void testWebSocketValidatorOwnOriginFromWebSocketScheme()
+    {
+        Map<String, String> config = new HashMap<>();
+        config.put( "cors.origin", "https://console.example.com" );
+
+        runFunction( "/com/enonic/lib/cors/test-cors.js", "testWebSocketValidatorOwnOriginFromWebSocketScheme", config, "wss",
+                     "api.example.com", 443 );
+    }
+
+    @Test
     public void testWebSocketValidatorWithoutOwnOrigin()
     {
         Map<String, String> config = new HashMap<>();

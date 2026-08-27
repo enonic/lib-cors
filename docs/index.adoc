@@ -9,7 +9,7 @@ A library for handling CORS (Cross-Origin Resource Sharing) headers in Enonic XP
 
 CORS lets browsers safely make cross-origin requests. This library reads your application's `.cfg` file and produces the correct `Access-Control-*` response headers, including full preflight (OPTIONS) handling with origin matching, method validation, and header validation.
 
-The same `cors.origin` allowlist also drives an origin validator for WebSocket upgrades, which XP guards with a separate same-origin check of its own.
+The same `cors.origin` allowlist can also validate the `Origin` header of WebSocket upgrades.
 
 == Installation
 
@@ -86,10 +86,9 @@ Register the filter in your `site.xml` (or equivalent descriptor) as described i
 
 === WebSocket upgrade
 
-XP performs its own same-origin check on a WebSocket handshake: a client served from a different
-host than the app is rejected with `403` before the controller's response headers are ever read.
-Returning a `checkOrigin` predicate on the `webSocket` object replaces that check with the
-`cors.origin` allowlist:
+XP checks the `Origin` header of a WebSocket upgrade against the app's own origin and rejects other
+origins with `403`. To accept the origins listed in `cors.origin`, return a `checkOrigin` predicate
+in the `webSocket` response:
 
 [source,js]
 ----
@@ -105,12 +104,8 @@ exports.get = function (req) {
 };
 ----
 
-WARNING: Supplying `checkOrigin` *replaces* XP's same-origin check rather than widening it. The
-validator therefore accepts the app's own origin alongside the configured ones, so that same-origin
-clients keep the access the platform was granting them for free.
-
-XP calls the predicate during the handshake, after the controller has returned, passing only the
-`Origin` header value. Everything it needs is captured when the controller builds it.
+NOTE: XP applies a supplied `checkOrigin` predicate instead of its own same-origin check. The
+predicate returned by this library accepts the app's own origin as well as the configured ones.
 
 === Explicit configuration
 
@@ -158,7 +153,7 @@ cors.maxAge = 3600
 
 | `cors.origin`
 | _(not set)_
-| Allowed origin(s). When omitted, CORS is disabled and no headers are added, and the WebSocket validator leaves XP's own same-origin check in place. See <<origin-matching>> below.
+| Allowed origin(s). When omitted, CORS is disabled, no headers are added, and `getWebSocketOriginValidator` returns `undefined`. See <<origin-matching>> below.
 
 | `cors.credentials`
 | `false`
@@ -367,7 +362,7 @@ exports.options = function (req) {
 
 === `getWebSocketOriginValidator(req)`
 
-Returns a `checkOrigin` predicate for a WebSocket upgrade response, derived from `app.config`.
+Returns a `checkOrigin` predicate for a WebSocket upgrade response, based on `app.config`.
 
 [.lead]
 Parameters
@@ -384,16 +379,16 @@ Parameters
 [.lead]
 Returns
 
-*function | undefined* — A predicate taking the `Origin` header value and returning a boolean, or `undefined` when `cors.origin` is not configured. Returning `undefined` from the controller leaves XP's own same-origin check in place.
+*function | undefined* — A predicate that takes the `Origin` header value and returns a boolean, or `undefined` when `cors.origin` is not configured. With `undefined`, XP's own same-origin check stays in place.
 
-The predicate accepts an origin when any of the following holds:
+The predicate accepts an origin when:
 
 * `cors.origin` is `*`.
-* The origin equals the app's own origin, as built by <<get-request-origin,`getRequestOrigin`>>.
+* The origin equals the app's own origin, see <<get-request-origin,`getRequestOrigin`>>.
 * The origin matches an entry of `cors.origin` (literal or `~`-prefixed regex).
-* The `Origin` header is absent. Non-browser clients send none, and cross-site WebSocket hijacking requires a browser to send one. This is the opposite of the HTTP side, where a missing `Origin` simply means the request is not a CORS request.
+* The `Origin` header is missing.
 
-The literal string `null` — the opaque origin sent by a sandboxed iframe or a `file://` page — is an ordinary string here, so it is rejected unless an allowlist entry matches it explicitly. An empty `Origin` is treated the same way: the header is present, so it is not the absent case, and XP's own check rejects it too.
+The value `null` and an empty value are rejected unless an entry of `cors.origin` matches them.
 
 [.lead]
 Example
@@ -435,7 +430,7 @@ Parameters
 [.lead]
 Returns
 
-*function | undefined* — The `checkOrigin` predicate, or `undefined` to keep XP's default check.
+*function | undefined* — The `checkOrigin` predicate, or `undefined` when `cors.origin` is not configured.
 
 [.lead]
 Example
@@ -459,7 +454,7 @@ exports.get = function (req) {
 [#get-request-origin]
 === `getRequestOrigin(req)`
 
-Builds the origin a browser would send for a request to this app, normalized the way RFC 6454 and XP's own same-origin check normalize it: the port is omitted when it is the scheme's default.
+Builds the app's own origin from the request: `scheme://host`, with the port appended only when it is not the default for the scheme. The schemes `ws` and `wss` are written as `http` and `https`.
 
 [.lead]
 Parameters
@@ -488,4 +483,7 @@ corsLib.getRequestOrigin(req); // 'https://api.example.com'
 
 // scheme 'http', host 'localhost', port 8080
 corsLib.getRequestOrigin(req); // 'http://localhost:8080'
+
+// scheme 'wss', host 'api.example.com', port 443
+corsLib.getRequestOrigin(req); // 'https://api.example.com'
 ----
