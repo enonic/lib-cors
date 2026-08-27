@@ -1,6 +1,14 @@
 name: Gradle Build
 
-on: [push]
+on:
+  push:
+  # release-tools/release pushes the next SNAPSHOT with GITHUB_TOKEN, which never fires
+  # `on: push`, so it re-runs this workflow through `gh workflow run` instead
+  workflow_dispatch:
+
+# Least privilege for GITHUB_TOKEN; the release job widens only what it needs
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -22,6 +30,10 @@ jobs:
 
     needs: build
     if: needs.build.outputs.release == 'true'
+
+    permissions:
+      contents: write # tag, GitHub release, next-SNAPSHOT commit
+      actions: write # `gh workflow run` for the SNAPSHOT build
 
     steps:
       - uses: enonic/release-tools/release@master

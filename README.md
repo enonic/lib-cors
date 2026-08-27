@@ -92,8 +92,34 @@ If you configure `cors.exposedHeaders = *`, browsers only treat `*` as a wildcar
 The WebSocket predicate returned by `getWebSocketOriginValidator(req)` uses the same `cors.origin`
 list. A request without an `Origin` header is accepted, as in XP's own check.
 
-## Building
+## Development
 
-```bash
-./gradlew build
+TypeScript is type-checked with `tsc` (TypeScript 7) and bundled by esbuild into a single
+`lib/enonic/cors.js` in `build/esbuild`, which Gradle folds into the jar resources. Only the
+bundle ships: `lib/util.ts` is inlined, so the jar never adds files to a consuming app's `lib/`
+namespace beyond `lib/enonic/cors.js`.
+
 ```
+pnpm build       # esbuild -> build/esbuild (dev, with source maps)
+pnpm check       # types + lint + format
+pnpm test        # Node tests for the TS utilities
+./gradlew build  # everything above plus the Java tests and the jar
+```
+
+A few constraints follow from that:
+
+- **The output must stay Nashorn-compatible.** A library's JS runs under the consuming app's
+  script engine, and XP 8 still defaults to Nashorn 15.7 (`--language=es6`): ES5.1 plus a partial
+  ES2015 subset. esbuild targets ES5 and keeps only `let`/`const` native; arrows are lowered because
+  Nashorn gets `this` wrong inside them, and `for…of` because Nashorn loses the loop binding in
+  closures. Syntax esbuild cannot lower (classes, destructuring, spread, …) fails the build, and
+  `esbuild.config.js` also rejects regex flags and lookbehind that Nashorn cannot parse.
+  `tsconfig.json` pins `lib` to `ES5` so ES2015+ built-ins (`Promise`, `Map`, `Object.assign`, …)
+  are not even typed. `target` is `ES2015` only because TypeScript 7 removed `ES5` as a target;
+  with `noEmit` it has no effect on the output.
+- **The Java tests run the bundle under Nashorn.** `CorsHeadersTest` loads the emitted
+  `lib/enonic/cors.js` through XP's `ScriptTestSupport`, so an emit Nashorn cannot parse fails
+  the build.
+- **Server code cannot import npm packages.** esbuild would inline them into the bundle, and
+  anything not ES5-safe breaks at runtime. `@enonic-types/*` is fine through `import type`,
+  which is elided.

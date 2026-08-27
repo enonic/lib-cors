@@ -1,29 +1,30 @@
 {
-  "private": true,
-  "packageManager": "pnpm@10.33.4",
-  "engines": {
-    "node": ">=24.16.0",
-    "pnpm": ">=10.33.4"
-  },
-  "type": "module",
-  "scripts": {
-    "build": "pnpm build:dev",
-    "build:prod": "cross-env NODE_ENV=production node esbuild.config.js",
-    "build:dev": "node esbuild.config.js",
-    "check": "pnpm check:lint && pnpm check:types",
-    "check:lint": "biome check .",
-    "check:types": "tsc --noEmit",
-    "test": "node --test src/test/node/util.test.ts",
-    "fix": "biome check . --fix",
-    "prepare": "husky"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "~2.5.10",
-    "@enonic-types/core": "^8.0.4",
-    "@enonic-types/global": "^8.0.4",
-    "cross-env": "^10.1.0",
-    "esbuild": "~0.28.2",
-    "husky": "^9.1.7",
-    "typescript": "~5.8.3"
-  }
+    "name": "lib-cors",
+    "private": true,
+    "type": "module",
+    "packageManager": "pnpm@11.23.0",
+    "scripts": {
+        "build": "pnpm build:dev",
+        "build:prod": "cross-env NODE_ENV=production node esbuild.config.js",
+        "build:dev": "node esbuild.config.js",
+        "check": "pnpm check:types && pnpm check:lint",
+        "check:types": "tsc --noEmit",
+        "check:lint": "biome check .",
+        "test": "node --test src/test/node/util.test.ts",
+        "fix": "biome check . --fix",
+        "prepare": "husky"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "~2.5.10",
+        "@enonic-types/core": "~8.0.4",
+        "@enonic-types/global": "~8.0.4",
+        "cross-env": "~10.1.0",
+        "esbuild": "~0.28.2",
+        "husky": "~9.1.7",
+        "typescript": "~7.0.2"
+    },
+    "engines": {
+        "node": ">= 24.19.0",
+        "pnpm": ">= 11.23.0"
+    }
 }

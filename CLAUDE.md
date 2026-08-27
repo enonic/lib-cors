@@ -2,17 +2,17 @@
 
 ## Project
 
-**lib-cors** (`com.enonic.lib.cors`) is an Enonic XP library providing CORS header handling for controllers and filters. Targets XP 7+ (Nashorn).
+**lib-cors** (`com.enonic.lib.cors`) is an Enonic XP library providing CORS header handling for controllers and filters. Targets XP 8+. The emitted JS runs under the consuming app's script engine, which defaults to Nashorn in XP 8, so the output must stay ES5 plus the ES2015 subset listed in `.claude/rules/typescript.md`.
 
 ## Commands
 
 ```bash
-./gradlew build             # full build (production by default)
-./gradlew build -Penv=dev   # dev build
-pnpm build                  # dev build (TypeScript only)
-pnpm check                  # lint + type-check
+./gradlew build             # full build (production by default): esbuild -> build/esbuild, jar, Java + Node tests
+./gradlew build -Penv=dev   # dev build (source maps)
+pnpm build                  # dev esbuild bundle only -> build/esbuild
+pnpm check                  # type-check (tsc) + lint/format (biome)
 pnpm fix                    # auto-fix lint + formatting
-pnpm test                   # test TS utility functions only
+pnpm test                   # Node tests for the TS utilities
 ```
 
 ## Git & GitHub
