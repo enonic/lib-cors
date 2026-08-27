@@ -18,9 +18,9 @@
     "linter": {
         "enabled": true,
         "rules": {
-            "recommended": true,
+            "preset": "recommended",
             "a11y": {
-                "recommended": false
+                "preset": "none"
             },
             "complexity": {
                 "noUselessTypeConstraint": {
