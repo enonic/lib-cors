@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": false,
+        "declaration": true,
+        "emitDeclarationOnly": true,
+        "rootDir": "src/main/resources/lib",
+        "outDir": "build/types-dts"
+    },
+    "include": [],
+    "files": ["src/main/resources/lib/enonic/cors.ts"]
+}

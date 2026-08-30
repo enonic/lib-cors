@@ -99,11 +99,12 @@ TypeScript is type-checked with `tsc` (TypeScript 7) and bundled by esbuild into
 bundle ships: `lib/util.ts` is inlined, so the jar never adds files to a consuming app's `lib/`
 namespace beyond `lib/enonic/cors.js`.
 
-```
+```bash
 pnpm build       # esbuild -> build/esbuild (dev, with source maps)
 pnpm check       # types + lint + format
 pnpm test        # Node tests for the TS utilities
-./gradlew build  # everything above plus the Java tests and the jar
+pnpm test:types  # build the types package, check its packlist and type-check it as a consumer
+./gradlew build  # everything above plus the Java tests, the jar and build/types
 ```
 
 A few constraints follow from that:
@@ -120,6 +121,15 @@ A few constraints follow from that:
 - **The Java tests run the bundle under Nashorn.** `CorsHeadersTest` loads the emitted
   `lib/enonic/cors.js` through XP's `ScriptTestSupport`, so an emit Nashorn cannot parse fails
   the build.
+- **The types package is generated, not written.** `tsconfig.types.json` emits declarations from
+  `cors.ts` — `util.ts` never ships — and `types/build.mjs` assembles `build/types`, taking the
+  version from `gradle.properties`. A public type reaches the package only if it is `export`ed, and
+  the `declare global { interface XpLibraries }` block is what types `require('/lib/enonic/cors')`
+  for consumers (esbuild erases it). `types/verify.mjs` checks the built package rather than the
+  emitted file: the npm packlist, an import-style consumer (`types/test/consumer.ts`) and a
+  `require()`-only one (`types/test/require-only.ts`), both with `skipLibCheck: false`. On a
+  release build, `release-tools` publishes `build/types` to npm right after the Maven publish —
+  `latest` for `x.y.z`, `beta` otherwise, never for SNAPSHOT.
 - **Server code cannot import npm packages.** esbuild would inline them into the bundle, and
   anything not ES5-safe breaks at runtime. `@enonic-types/*` is fine through `import type`,
   which is elided.

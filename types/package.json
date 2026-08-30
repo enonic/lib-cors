@@ -1,32 +1,20 @@
 {
-  "name": "@enonic-types/lib-cors",
-  "version": "0.0.0",
-  "description": "Type definitions for the Enonic XP CORS library",
-  "types": "index.d.ts",
-  "files": [
-    "*"
-  ],
-  "keywords": [
-    "enonic",
-    "enonic-xp",
-    "lib-cors",
-    "cors",
-    "types",
-    "typescript"
-  ],
-  "license": "Apache-2.0",
-  "homepage": "https://github.com/enonic/lib-cors#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/enonic/lib-cors.git"
-  },
-  "bugs": {
-    "url": "https://github.com/enonic/lib-cors/issues"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@enonic-types/core": "^8.0.0"
-  }
+    "name": "@enonic-types/lib-cors",
+    "version": "0.0.0",
+    "description": "Type definitions for the Enonic XP CORS library (/lib/enonic/cors)",
+    "types": "cors.d.ts",
+    "files": ["cors.d.ts"],
+    "keywords": ["enonic", "enonic-xp", "lib-cors", "cors", "types", "typescript"],
+    "license": "Apache-2.0",
+    "homepage": "https://github.com/enonic/lib-cors#readme",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/enonic/lib-cors.git"
+    },
+    "bugs": {
+        "url": "https://github.com/enonic/lib-cors/issues"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
 }

@@ -66,6 +66,27 @@ val pnpmBuild = tasks.register<PnpmTask>("pnpmBuild") {
     doFirst { staleOutput.deleteRecursively() }
 }
 
+// @enonic-types/lib-cors, published from build/types by release-tools on release builds
+val typesOutput = layout.buildDirectory.dir("types")
+
+val buildTypes = tasks.register<PnpmTask>("buildTypes") {
+    dependsOn(tasks.named("pnpmInstall"))
+    args = listOf("run", "build:types")
+    environment = mapOf("FORCE_COLOR" to "true")
+    inputs.dir("src/main/resources")
+    inputs.files("types/package.json", "types/README.md", "types/build.mjs", "LICENSE")
+    inputs.files("gradle.properties", "package.json", "pnpm-lock.yaml", "tsconfig.json", "tsconfig.types.json")
+    outputs.dir(typesOutput)
+    outputs.dir(layout.buildDirectory.dir("types-dts"))
+}
+
+val testTypes = pnpmCheck("testTypes", "test:types")
+testTypes.configure { dependsOn(buildTypes) }
+
+tasks.named("assemble") {
+    dependsOn(buildTypes)
+}
+
 tasks.named<ProcessResources>("processResources") {
     exclude("**/*.ts")
     includeEmptyDirs = false
@@ -73,7 +94,7 @@ tasks.named<ProcessResources>("processResources") {
 }
 
 tasks.named("check") {
-    dependsOn("checkTypes", "checkLint", "pnpmTest")
+    dependsOn("checkTypes", "checkLint", "pnpmTest", testTypes)
 }
 
 tasks.withType<Test>().configureEach {

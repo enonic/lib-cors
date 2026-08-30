@@ -10,15 +10,14 @@ on:
 permissions:
   contents: read
 
-permissions:
-  id-token: write  # Required for npm OIDC / trusted publishing
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.build-and-publish.outputs.release }}
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC) of @enonic-types/lib-cors from build/types
     steps:
       - id: build-and-publish
         uses: enonic/release-tools/build-and-publish@master
@@ -28,6 +27,7 @@ jobs:
           npmPublish: true
           releaseBranch: |
             master
+            2.x
             1.x
 
   release:
