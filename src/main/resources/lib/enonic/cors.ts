@@ -3,24 +3,7 @@
  *
  * Provides utilities for handling CORS headers in XP controllers and filters,
  * plus an origin validator for WebSocket upgrades based on the same allowlist.
- * Targets XP 8+.
- *
- * Configuration via app .cfg file:
- * - cors.origin        — allowed origin(s): '*' to allow all, comma-separated list of
- *                         literal origins or '~'-prefixed regex patterns
- *                         (e.g. 'https://a.com, ~https://.*\.b\.com').
- *                         Use '~.*' to reflect any origin (supports credentials).
- *                         When omitted, CORS is disabled (no headers are added)
- * - cors.credentials   — 'true' to allow credentials (incompatible with '*' origin)
- * - cors.allowedHeaders — comma-separated. When omitted and
- *                         Access-Control-Request-Headers is present, that value
- *                         is reflected back. When configured, preflight requests
- *                         for disallowed headers are rejected (403)
- * - cors.methods       — comma-separated (default: 'GET, HEAD, POST').
- *                         Preflight requests for disallowed methods
- *                         are rejected (403)
- * - cors.exposedHeaders — comma-separated (headers the browser may access)
- * - cors.maxAge        — preflight cache seconds
+ * Targets XP 8+. Configuration keys are documented on {@link CorsConfig}.
  *
  * Usage in an XP controller:
  * ```js
@@ -62,26 +45,59 @@
 
 import { matchOrigin, parseCommaSeparatedList } from '../util';
 
-type CorsConfig = Record<string, string | undefined>;
+// Types `require('/lib/enonic/cors')` for consumers of @enonic-types/lib-cors; erased from the bundle
+declare global {
+    interface XpLibraries {
+        '/lib/enonic/cors': typeof import('./cors');
+    }
+}
 
-type CorsRequest = {
+/** The `cors.*` configuration keys, typically read from `app.config`; other keys there are ignored. */
+export type CorsConfig = {
+    /**
+     * Allowed origins: `'*'`, or a comma-separated list of literal origins and `~`-prefixed regex
+     * patterns (full match), e.g. `'https://a.com, ~https://.*\.b\.com'`. `'~.*'` reflects any
+     * origin and, unlike `'*'`, supports credentials. Unset disables CORS.
+     */
+    'cors.origin'?: string;
+    /** `'true'` allows credentials; ignored when the resolved `Access-Control-Allow-Origin` is `'*'`. */
+    'cors.credentials'?: string;
+    /**
+     * Comma-separated. Unset reflects `Access-Control-Request-Headers`; set, preflight requests for
+     * other headers are rejected with `403`.
+     */
+    'cors.allowedHeaders'?: string;
+    /** Comma-separated, default `'GET, HEAD, POST'`. Preflight requests for other methods are rejected with `403`. */
+    'cors.methods'?: string;
+    /** Comma-separated headers the browser may read from the response. */
+    'cors.exposedHeaders'?: string;
+    /** Preflight cache lifetime in seconds. */
+    'cors.maxAge'?: string;
+};
+
+/** The part of an XP request this library reads: a `getHeader(name)` accessor. */
+export type CorsRequest = {
     getHeader(name: string): string | null;
 };
 
-type CorsHeaders = Record<string, string>;
+/** CORS response headers to merge into a controller or filter response. */
+export type CorsHeaders = Record<string, string>;
 
-type CorsResponse = {
-    status: number;
+/** Preflight response: `204` with CORS headers, or `403` with none. */
+export type CorsResponse = {
+    status: 204 | 403;
     headers: CorsHeaders;
 };
 
-type OriginRequest = {
+/** The part of an XP request needed to build the app's own origin. */
+export type OriginRequest = {
     scheme?: string;
     host?: string;
     port?: number | string;
 };
 
-type OriginValidator = (origin?: string | null) => boolean;
+/** A `checkOrigin` predicate for WebSocket upgrades; receives the `Origin` header as XP hands it over. */
+export type OriginValidator = (origin?: string | null) => boolean;
 
 const DEFAULT_METHODS = 'GET, HEAD, POST';
 

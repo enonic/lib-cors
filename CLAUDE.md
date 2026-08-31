@@ -1,5 +1,3 @@
-# CLAUDE.md
-
 ## Project
 
 **lib-cors** (`com.enonic.lib.cors`) is an Enonic XP library providing CORS header handling for controllers and filters. Targets XP 8+. The emitted JS runs under the consuming app's script engine, which defaults to Nashorn in XP 8, so the output must stay ES5 plus the ES2015 subset listed in `.claude/rules/typescript.md`.
@@ -13,7 +11,12 @@ pnpm build                  # dev esbuild bundle only -> build/esbuild
 pnpm check                  # type-check (tsc) + lint/format (biome)
 pnpm fix                    # auto-fix lint + formatting
 pnpm test                   # Node tests for the TS utilities
+pnpm build:types            # @enonic-types/lib-cors package -> build/types (version from gradle.properties)
+pnpm test:types             # build:types + packlist check + type-check types/test against the built package
 ```
+
+`./gradlew build` runs `buildTypes` (into `assemble`) and `testTypes` (into `check`); CI publishes
+`build/types` to npm right after the Maven publish on release versions only.
 
 ## Git & GitHub
 
