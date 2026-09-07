@@ -12,7 +12,8 @@
         "check:types": "tsc --noEmit",
         "check:lint": "biome check .",
         "test": "node --test src/test/node/util.test.ts",
-        "test:types": "pnpm build:types && node types/verify.mjs",
+        "test:types": "pnpm build:types && pnpm verify:types",
+        "verify:types": "node types/verify.mjs",
         "fix": "biome check . --fix",
         "prepare": "husky"
     },
