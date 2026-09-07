@@ -63,11 +63,14 @@ export type CorsConfig = {
     /** `'true'` allows credentials; ignored when the resolved `Access-Control-Allow-Origin` is `'*'`. */
     'cors.credentials'?: string;
     /**
-     * Comma-separated. Unset reflects `Access-Control-Request-Headers`; set, preflight requests for
-     * other headers are rejected with `403`.
+     * Comma-separated, or `'*'` to skip the check. Unset reflects `Access-Control-Request-Headers`;
+     * set to a list, preflight requests for other headers are rejected with `403`.
      */
     'cors.allowedHeaders'?: string;
-    /** Comma-separated, default `'GET, HEAD, POST'`. Preflight requests for other methods are rejected with `403`. */
+    /**
+     * Comma-separated, or `'*'` to skip the check; default `'GET, HEAD, POST'`. Set to a list,
+     * preflight requests for other methods are rejected with `403`.
+     */
     'cors.methods'?: string;
     /** Comma-separated headers the browser may read from the response. */
     'cors.exposedHeaders'?: string;
@@ -83,7 +86,7 @@ export type CorsRequest = {
 /** CORS response headers to merge into a controller or filter response. */
 export type CorsHeaders = Record<string, string>;
 
-/** Preflight response: `204` with CORS headers, or `403` with none. */
+/** Preflight response: `403` with no headers, or `204` — which carries CORS headers only when the origin was allowed. */
 export type CorsResponse = {
     status: 204 | 403;
     headers: CorsHeaders;
@@ -108,7 +111,8 @@ const DEFAULT_METHODS = 'GET, HEAD, POST';
  * - `'*'` — responds with `Access-Control-Allow-Origin: *`.
  * - Comma-separated list — each value is either a literal origin or a
  *   `~`-prefixed regex (full match). The request origin is reflected back
- *   on match; `{ vary: 'Origin' }` is returned on mismatch.
+ *   on match; `{ vary: 'Origin' }` is returned when it does not match, and
+ *   when the request carries no `Origin` header at all.
  * - `'~.*'` — reflects any origin (unlike `'*'`, supports credentials).
  * - Not set — CORS is disabled; returns `{}`.
  *
@@ -252,10 +256,15 @@ function isPreflightMethodAllowed(config: CorsConfig, req: CorsRequest): boolean
 /**
  * Resolves a preflight response based on configuration and request.
  *
- * Rejects with 403 (no CORS headers) when:
- * - `cors.allowedHeaders` is configured and the request asks for
- *   headers not in that list, or
+ * With `cors.origin` unset CORS is disabled and every preflight gets a bare
+ * `204`; neither check below runs. Otherwise rejects with 403 (no CORS
+ * headers) when:
+ * - `cors.allowedHeaders` is configured as a list and the request asks for
+ *   headers not in it, or
  * - `Access-Control-Request-Method` names a method not in the allowed set.
+ *
+ * A `204` is not proof the origin was allowed: a request whose `Origin` is
+ * absent or matches nothing also gets `204`, carrying only `{ vary: 'Origin' }`.
  *
  * @param config - Key-value config map (typically `app.config`).
  * @param req - Incoming request with a `getHeader` method.
@@ -276,10 +285,12 @@ export function resolveOptionsResponse(config: CorsConfig, req: CorsRequest): Co
 }
 
 /**
- * Returns a 204 preflight response with CORS headers from `app.config`.
+ * Returns a preflight response resolved from `app.config`.
  *
  * Rejects with 403 (no CORS headers) when the preflight requests a
- * disallowed method or header.
+ * disallowed method or header. Every other case is a `204`, which carries
+ * CORS headers only when the origin was allowed — see
+ * {@link resolveOptionsResponse}.
  *
  * @param req - Incoming request with a `getHeader` method.
  * @returns Object with `status: 204` and resolved CORS headers,
@@ -339,8 +350,9 @@ export function getRequestOrigin(req: OriginRequest): string | undefined {
  * - `cors.origin` is `'*'` — accepts any origin.
  * - Otherwise — accepts the app's own origin and any origin matching an entry
  *   of the comma-separated list (literal or `~`-prefixed regex).
- * - A missing `Origin` header is accepted. `null` and an empty value are
- *   rejected unless an entry matches them.
+ * - A missing `Origin` header is accepted. The opaque origin `'null'` and an
+ *   empty value are rejected unless an entry matches them — and only a regex
+ *   entry can match an empty value, since empty list parts are dropped.
  *
  * @param config - Key-value config map (typically `app.config`).
  * @param req - Incoming request exposing `scheme`, `host` and `port`.
