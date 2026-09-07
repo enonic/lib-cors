@@ -80,7 +80,8 @@ val buildTypes = tasks.register<PnpmTask>("buildTypes") {
     outputs.dir(layout.buildDirectory.dir("types-dts"))
 }
 
-val testTypes = pnpmCheck("testTypes", "test:types")
+// verify:types, not test:types — the latter regenerates build/types, which is buildTypes' output
+val testTypes = pnpmCheck("testTypes", "verify:types")
 testTypes.configure { dependsOn(buildTypes) }
 
 tasks.named("assemble") {

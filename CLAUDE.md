@@ -12,11 +12,16 @@ pnpm check                  # type-check (tsc) + lint/format (biome)
 pnpm fix                    # auto-fix lint + formatting
 pnpm test                   # Node tests for the TS utilities
 pnpm build:types            # @enonic-types/lib-cors package -> build/types (version from gradle.properties)
-pnpm test:types             # build:types + packlist check + type-check types/test against the built package
+pnpm test:types             # build:types + verify:types, the one-command developer entry point
+pnpm verify:types           # packlist check + type-check types/test against an existing build/types
 ```
 
 `./gradlew build` runs `buildTypes` (into `assemble`) and `testTypes` (into `check`); CI publishes
 `build/types` to npm right after the Maven publish on release versions only.
+
+`testTypes` runs `verify:types`, not `test:types`, because `types/build.mjs` opens with
+`rm -rf build/types` — running the full `test:types` there would have a verification task delete
+and rewrite `buildTypes`' declared output.
 
 ## Git & GitHub
 
