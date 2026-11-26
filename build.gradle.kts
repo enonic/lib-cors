@@ -32,7 +32,7 @@ dependencies {
 node {
     download = true
     version = "24.22.3"
-    pnpmVersion = "11.23.0"
+    pnpmVersion = "11.29.0"
 }
 
 val environmentShort = if (providers.gradleProperty("env").orNull == "dev") "dev" else "prod"
